@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/sirius.dir/sirius.cpp.o -o sirius   -L/data/home/amohs002/projects/research/SIRIUS_Lex/ortools/lib  -Wl,-rpath,/data/home/amohs002/projects/research/SIRIUS_Lex/ortools/lib -lortools 

@@ -1,0 +1,8 @@
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/nurses_sat/build/CMakeFiles/nurses_sat.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/nurses_sat/build/CMakeFiles/test.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/nurses_sat/build/CMakeFiles/edit_cache.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/nurses_sat/build/CMakeFiles/rebuild_cache.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/nurses_sat/build/CMakeFiles/list_install_components.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/nurses_sat/build/CMakeFiles/install.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/nurses_sat/build/CMakeFiles/install/local.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/nurses_sat/build/CMakeFiles/install/strip.dir

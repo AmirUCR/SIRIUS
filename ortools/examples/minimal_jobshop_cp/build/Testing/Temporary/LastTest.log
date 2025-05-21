@@ -1,0 +1,46 @@
+Start testing: Dec 05 15:42 PST
+----------------------------------------------------------
+1/1 Testing: test_minimal_jobshop_cp
+1/1 Test: test_minimal_jobshop_cp
+Command: "/home/amohs002/projects/research/SIRIUS/or-tools/examples/minimal_jobshop_cp/build/bin/minimal_jobshop_cp"
+Directory: /data/home/amohs002/projects/research/SIRIUS/or-tools/examples/minimal_jobshop_cp/build
+"test_minimal_jobshop_cp" start time: Dec 05 15:42 PST
+Output:
+----------------------------------------------------------
+I1205 15:42:47.964649 3586543 minimal_jobshop_cp.cc:41] Machines:  0 1 2
+I1205 15:42:47.964725 3586543 minimal_jobshop_cp.cc:51] Jobs:
+I1205 15:42:47.964733 3586543 minimal_jobshop_cp.cc:59] Job 0: [(0, 3)(1, 2)(2, 2)]
+
+I1205 15:42:47.964735 3586543 minimal_jobshop_cp.cc:59] Job 1: [(0, 2)(2, 1)(1, 4)]
+
+I1205 15:42:47.964737 3586543 minimal_jobshop_cp.cc:59] Job 2: [(1, 4)(2, 3)]
+
+I1205 15:42:47.964738 3586543 minimal_jobshop_cp.cc:69] Horizon: 21
+I1205 15:42:47.965024 3586543 search.cc:285] Start search (memory used = 11.17 MB)
+I1205 15:42:47.965236 3586543 search.cc:285] Root node processed (time = 0 ms, constraints = 39, memory used = 11.17 MB)
+I1205 15:42:47.965402 3586543 search.cc:285] Solution #0 (objective = 14, time = 0 ms, branches = 6, failures = 0, depth = 6, memory used = 11.17 MB)
+I1205 15:42:47.965506 3586543 search.cc:285] Solution #1 (objective = 12, objective maximum = 14, time = 0 ms, branches = 8, failures = 4, depth = 4, memory used = 11.17 MB)
+I1205 15:42:47.965565 3586543 search.cc:285] Solution #2 (objective = 11, objective maximum = 14, time = 0 ms, branches = 10, failures = 6, depth = 3, memory used = 11.17 MB)
+I1205 15:42:47.965594 3586543 search.cc:285] Finished search tree (time = 0 ms, branches = 10, failures = 9, memory used = 11.17 MB)
+I1205 15:42:47.965607 3586543 search.cc:285] End search (time = 1 ms, branches = 10, failures = 9, memory used = 11.17 MB, speed = 10000 branches/s)
+I1205 15:42:47.965613 3586543 minimal_jobshop_cp.cc:159] Optimal Schedule Length: 11
+I1205 15:42:47.965617 3586543 minimal_jobshop_cp.cc:160] 
+I1205 15:42:47.965618 3586543 minimal_jobshop_cp.cc:162] Optimal Schedule:
+I1205 15:42:47.965623 3586543 minimal_jobshop_cp.cc:171] Machine 0: Job_0_0 Job_1_0 
+I1205 15:42:47.965643 3586543 minimal_jobshop_cp.cc:171] Machine 1: Job_2_0 Job_0_1 Job_1_2 
+I1205 15:42:47.965648 3586543 minimal_jobshop_cp.cc:171] Machine 2: Job_1_1 Job_0_2 Job_2_1 
+I1205 15:42:47.965651 3586543 minimal_jobshop_cp.cc:189] Time Intervals for Tasks: 
+I1205 15:42:47.965652 3586543 minimal_jobshop_cp.cc:191] Machine 0: [( 0, 0),( 3, 3)][( 3, 3),( 5, 5)]
+I1205 15:42:47.965653 3586543 minimal_jobshop_cp.cc:191] Machine 1: [( 0, 0),( 4, 4)][( 4, 4),( 6, 6)][( 6, 7),(10, 11)]
+I1205 15:42:47.965654 3586543 minimal_jobshop_cp.cc:191] Machine 2: [( 5, 5),( 6, 6)][( 6, 6),( 8, 8)][( 8, 8),(11, 11)]
+I1205 15:42:47.965655 3586543 minimal_jobshop_cp.cc:193] Advanced usage:
+I1205 15:42:47.965656 3586543 minimal_jobshop_cp.cc:194] Time: 1ms
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_minimal_jobshop_cp" end time: Dec 05 15:42 PST
+"test_minimal_jobshop_cp" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Dec 05 15:42 PST

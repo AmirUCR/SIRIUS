@@ -1,0 +1,22 @@
+Start testing: Dec 05 15:42 PST
+----------------------------------------------------------
+1/1 Testing: test_simple_sat_program
+1/1 Test: test_simple_sat_program
+Command: "/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build/bin/simple_sat_program"
+Directory: /data/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build
+"test_simple_sat_program" start time: Dec 05 15:42 PST
+Output:
+----------------------------------------------------------
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1733442136.740505 3581804 simple_sat_program.cc:53] x = 1
+I0000 00:00:1733442136.740584 3581804 simple_sat_program.cc:54] y = 0
+I0000 00:00:1733442136.740590 3581804 simple_sat_program.cc:55] z = 0
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"test_simple_sat_program" end time: Dec 05 15:42 PST
+"test_simple_sat_program" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Dec 05 15:42 PST

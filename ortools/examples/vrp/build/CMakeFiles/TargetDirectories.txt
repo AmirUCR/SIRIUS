@@ -1,0 +1,8 @@
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/vrp/build/CMakeFiles/vrp.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/vrp/build/CMakeFiles/test.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/vrp/build/CMakeFiles/edit_cache.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/vrp/build/CMakeFiles/rebuild_cache.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/vrp/build/CMakeFiles/list_install_components.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/vrp/build/CMakeFiles/install.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/vrp/build/CMakeFiles/install/local.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/vrp/build/CMakeFiles/install/strip.dir

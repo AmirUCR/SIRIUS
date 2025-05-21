@@ -1,0 +1,23 @@
+Start testing: Dec 05 15:41 PST
+----------------------------------------------------------
+1/1 Testing: test_simple_knapsack_program
+1/1 Test: test_simple_knapsack_program
+Command: "/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_knapsack_program/build/bin/simple_knapsack_program"
+Directory: /data/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_knapsack_program/build
+"test_simple_knapsack_program" start time: Dec 05 15:41 PST
+Output:
+----------------------------------------------------------
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1733442117.081700 3575611 simple_knapsack_program.cc:71] Total value: 847
+I0000 00:00:1733442117.081826 3575611 simple_knapsack_program.cc:72] Packed items: {2, 3, 6, 13}
+I0000 00:00:1733442117.081834 3575611 simple_knapsack_program.cc:73] Total weight: 847
+I0000 00:00:1733442117.081838 3575611 simple_knapsack_program.cc:74] Packed weights: {194, 130, 230, 293}
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"test_simple_knapsack_program" end time: Dec 05 15:41 PST
+"test_simple_knapsack_program" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Dec 05 15:41 PST

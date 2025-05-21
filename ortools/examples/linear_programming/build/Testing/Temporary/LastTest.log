@@ -1,0 +1,78 @@
+Start testing: Dec 05 15:41 PST
+----------------------------------------------------------
+1/1 Testing: test_linear_programming
+1/1 Test: test_linear_programming
+Command: "/home/amohs002/projects/research/SIRIUS/or-tools/examples/linear_programming/build/bin/linear_programming"
+Directory: /data/home/amohs002/projects/research/SIRIUS/or-tools/examples/linear_programming/build
+"test_linear_programming" start time: Dec 05 15:41 PST
+Output:
+----------------------------------------------------------
+I1205 15:41:48.692851 3573776 linear_programming.cc:31] ---- Linear programming example with GLOP ----
+I1205 15:41:48.693622 3573776 linear_programming.cc:78] Number of variables = 3
+I1205 15:41:48.693652 3573776 linear_programming.cc:79] Number of constraints = 3
+I1205 15:41:48.694528 3573776 linear_programming.cc:88] Problem solved in 0 milliseconds
+I1205 15:41:48.694541 3573776 linear_programming.cc:91] Optimal objective value = 733.333
+I1205 15:41:48.694562 3573776 linear_programming.cc:94] x1 = 33.3333
+I1205 15:41:48.694564 3573776 linear_programming.cc:95] x2 = 66.6667
+I1205 15:41:48.694565 3573776 linear_programming.cc:96] x3 = 0
+I1205 15:41:48.694566 3573776 linear_programming.cc:98] Advanced usage:
+I1205 15:41:48.694567 3573776 linear_programming.cc:99] Problem solved in 2 iterations
+I1205 15:41:48.694569 3573776 linear_programming.cc:100] x1: reduced cost = 0
+I1205 15:41:48.694571 3573776 linear_programming.cc:101] x2: reduced cost = 0
+I1205 15:41:48.694572 3573776 linear_programming.cc:102] x3: reduced cost = -2.66667
+I1205 15:41:48.694574 3573776 linear_programming.cc:104] c0: dual value = 3.33333 activity = 100
+I1205 15:41:48.694580 3573776 linear_programming.cc:106] c1: dual value = 0.666667 activity = 600
+I1205 15:41:48.694582 3573776 linear_programming.cc:108] c2: dual value = -0 activity = 200
+I1205 15:41:48.694610 3573776 linear_programming.cc:31] ---- Linear programming example with CLP ----
+I1205 15:41:48.694939 3573776 linear_programming.cc:78] Number of variables = 3
+I1205 15:41:48.694944 3573776 linear_programming.cc:79] Number of constraints = 3
+I1205 15:41:48.696292 3573776 linear_programming.cc:88] Problem solved in 1 milliseconds
+I1205 15:41:48.696304 3573776 linear_programming.cc:91] Optimal objective value = 733.333
+I1205 15:41:48.696308 3573776 linear_programming.cc:94] x1 = 33.3333
+I1205 15:41:48.696310 3573776 linear_programming.cc:95] x2 = 66.6667
+I1205 15:41:48.696311 3573776 linear_programming.cc:96] x3 = 0
+I1205 15:41:48.696313 3573776 linear_programming.cc:98] Advanced usage:
+I1205 15:41:48.696313 3573776 linear_programming.cc:99] Problem solved in 2 iterations
+I1205 15:41:48.696315 3573776 linear_programming.cc:100] x1: reduced cost = -8.88178e-16
+I1205 15:41:48.696316 3573776 linear_programming.cc:101] x2: reduced cost = 0
+I1205 15:41:48.696318 3573776 linear_programming.cc:102] x3: reduced cost = -2.66667
+I1205 15:41:48.696319 3573776 linear_programming.cc:104] c0: dual value = 3.33333 activity = 100
+I1205 15:41:48.696321 3573776 linear_programming.cc:106] c1: dual value = 0.666667 activity = 600
+I1205 15:41:48.696323 3573776 linear_programming.cc:108] c2: dual value = -0 activity = 200
+I1205 15:41:48.696352 3573776 linear_programming.cc:31] ---- Linear programming example with GUROBI_LP ----
+W1205 15:41:48.696576 3573776 environment.cc:36] NOT_FOUND: Could not find the Gurobi shared library. Looked in: [/opt/gurobi1103/linux64/lib/libgurobi110.so', '/opt/gurobi1103/linux64/lib64/libgurobi110.so', '/opt/gurobi/linux64/lib/libgurobi110.so', '/opt/gurobi/linux64/lib64/libgurobi110.so', '/opt/gurobi1102/linux64/lib/libgurobi110.so', '/opt/gurobi1102/linux64/lib64/libgurobi110.so', '/opt/gurobi/linux64/lib/libgurobi110.so', '/opt/gurobi/linux64/lib64/libgurobi110.so', '/opt/gurobi1101/linux64/lib/libgurobi110.so', '/opt/gurobi1101/linux64/lib64/libgurobi110.so', '/opt/gurobi/linux64/lib/libgurobi110.so', '/opt/gurobi/linux64/lib64/libgurobi110.so', '/opt/gurobi1100/linux64/lib/libgurobi110.so', '/opt/gurobi1100/linux64/lib64/libgurobi110.so', '/opt/gurobi/linux64/lib/libgurobi110.so', '/opt/gurobi/linux64/lib64/libgurobi110.so', '/opt/gurobi1003/linux64/lib/libgurobi100.so', '/opt/gurobi1003/linux64/lib64/libgurobi100.so', '/opt/gurobi/linux64/lib/libgurobi100.so', '/opt/gurobi/linux64/lib64/libgurobi100.so', '/opt/gurobi1002/linux64/lib/libgurobi100.so', '/opt/gurobi1002/linux64/lib64/libgurobi100.so', '/opt/gurobi/linux64/lib/libgurobi100.so', '/opt/gurobi/linux64/lib64/libgurobi100.so', '/opt/gurobi1001/linux64/lib/libgurobi100.so', '/opt/gurobi1001/linux64/lib64/libgurobi100.so', '/opt/gurobi/linux64/lib/libgurobi100.so', '/opt/gurobi/linux64/lib64/libgurobi100.so', '/opt/gurobi1000/linux64/lib/libgurobi100.so', '/opt/gurobi1000/linux64/lib64/libgurobi100.so', '/opt/gurobi/linux64/lib/libgurobi100.so', '/opt/gurobi/linux64/lib64/libgurobi100.so', '/opt/gurobi952/linux64/lib/libgurobi95.so', '/opt/gurobi952/linux64/lib64/libgurobi95.so', '/opt/gurobi/linux64/lib/libgurobi95.so', '/opt/gurobi/linux64/lib64/libgurobi95.so', '/opt/gurobi951/linux64/lib/libgurobi95.so', '/opt/gurobi951/linux64/lib64/libgurobi95.so', '/opt/gurobi/linux64/lib/libgurobi95.so', '/opt/gurobi/linux64/lib64/libgurobi95.so', '/opt/gurobi950/linux64/lib/libgurobi95.so', '/opt/gurobi950/linux64/lib64/libgurobi95.so', '/opt/gurobi/linux64/lib/libgurobi95.so', '/opt/gurobi/linux64/lib64/libgurobi95.so', '/opt/gurobi911/linux64/lib/libgurobi91.so', '/opt/gurobi911/linux64/lib64/libgurobi91.so', '/opt/gurobi/linux64/lib/libgurobi91.so', '/opt/gurobi/linux64/lib64/libgurobi91.so', '/opt/gurobi910/linux64/lib/libgurobi91.so', '/opt/gurobi910/linux64/lib64/libgurobi91.so', '/opt/gurobi/linux64/lib/libgurobi91.so', '/opt/gurobi/linux64/lib64/libgurobi91.so', '/opt/gurobi903/linux64/lib/libgurobi90.so', '/opt/gurobi903/linux64/lib64/libgurobi90.so', '/opt/gurobi/linux64/lib/libgurobi90.so', '/opt/gurobi/linux64/lib64/libgurobi90.so', '/opt/gurobi902/linux64/lib/libgurobi90.so', '/opt/gurobi902/linux64/lib64/libgurobi90.so', '/opt/gurobi/linux64/lib/libgurobi90.so', '/opt/gurobi/linux64/lib64/libgurobi90.so', '/opt/gurobi811/linux64/lib/libgurobi81.so', '/opt/gurobi811/linux64/lib64/libgurobi81.so', '/opt/gurobi/linux64/lib/libgurobi81.so', '/opt/gurobi/linux64/lib64/libgurobi81.so', '/opt/gurobi801/linux64/lib/libgurobi80.so', '/opt/gurobi801/linux64/lib64/libgurobi80.so', '/opt/gurobi/linux64/lib/libgurobi80.so', '/opt/gurobi/linux64/lib64/libgurobi80.so', '/opt/gurobi752/linux64/lib/libgurobi75.so', '/opt/gurobi752/linux64/lib64/libgurobi75.so', '/opt/gurobi/linux64/lib/libgurobi75.so', '/opt/gurobi/linux64/lib64/libgurobi75.so', '/opt/gurobi/linux64/lib/libgurobi.so.11.0.3', '/opt/gurobi/linux64/lib/libgurobi.so.11.0.2', '/opt/gurobi/linux64/lib/libgurobi.so.11.0.1', '/opt/gurobi/linux64/lib/libgurobi.so.11.0.0', '/opt/gurobi/linux64/lib/libgurobi.so.10.0.3', '/opt/gurobi/linux64/lib/libgurobi.so.10.0.2', '/opt/gurobi/linux64/lib/libgurobi.so.10.0.1', '/opt/gurobi/linux64/lib/libgurobi.so.10.0.0', '/opt/gurobi/linux64/lib/libgurobi.so.9.5.2', '/opt/gurobi/linux64/lib/libgurobi.so.9.5.1', '/opt/gurobi/linux64/lib/libgurobi.so.9.5.0]. If you know where it is, pass the full path to 'LoadGurobiDynamicLibrary()'.
+I1205 15:41:48.696601 3573776 linear_programming.cc:39] Supports for solver GUROBI_LP not linked in.
+I1205 15:41:48.696603 3573776 linear_programming.cc:31] ---- Linear programming example with CPLEX_LP ----
+I1205 15:41:48.696606 3573776 linear_programming.cc:39] Supports for solver CPLEX_LP not linked in.
+I1205 15:41:48.696607 3573776 linear_programming.cc:31] ---- Linear programming example with GLPK_LP ----
+I1205 15:41:48.696608 3573776 linear_programming.cc:39] Supports for solver GLPK_LP not linked in.
+I1205 15:41:48.696610 3573776 linear_programming.cc:31] ---- Linear programming example with XPRESS_LP ----
+W1205 15:41:48.696672 3573776 environment.cc:201] Environment variable XPRESSDIR undefined.
+W1205 15:41:48.696691 3573776 environment.cc:267] NOT_FOUND: Could not find the Xpress shared library. Looked in: [/opt/xpressmp/lib/libxprs.so]. Please check environment variable XPRESSDIR
+
+I1205 15:41:48.696701 3573776 linear_programming.cc:39] Supports for solver XPRESS_LP not linked in.
+I1205 15:41:48.696702 3573776 linear_programming.cc:31] ---- Linear programming example with PDLP ----
+I1205 15:41:48.696742 3573776 linear_programming.cc:78] Number of variables = 3
+I1205 15:41:48.696745 3573776 linear_programming.cc:79] Number of constraints = 3
+I1205 15:41:48.697871 3573776 linear_programming.cc:88] Problem solved in 1 milliseconds
+I1205 15:41:48.697886 3573776 linear_programming.cc:91] Optimal objective value = 733.334
+I1205 15:41:48.697892 3573776 linear_programming.cc:94] x1 = 33.3324
+I1205 15:41:48.697895 3573776 linear_programming.cc:95] x2 = 66.6682
+I1205 15:41:48.697896 3573776 linear_programming.cc:96] x3 = 0
+I1205 15:41:48.697898 3573776 linear_programming.cc:98] Advanced usage:
+I1205 15:41:48.697899 3573776 linear_programming.cc:99] Problem solved in 256 iterations
+I1205 15:41:48.697900 3573776 linear_programming.cc:100] x1: reduced cost = 5.58153e-07
+I1205 15:41:48.697901 3573776 linear_programming.cc:101] x2: reduced cost = -2.67579e-07
+I1205 15:41:48.697903 3573776 linear_programming.cc:102] x3: reduced cost = -2.66667
+I1205 15:41:48.697905 3573776 linear_programming.cc:104] c0: dual value = 3.33333 activity = 100.001
+I1205 15:41:48.697908 3573776 linear_programming.cc:106] c1: dual value = 0.666667 activity = 599.997
+I1205 15:41:48.697910 3573776 linear_programming.cc:108] c2: dual value = -0 activity = 200.001
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_linear_programming" end time: Dec 05 15:41 PST
+"test_linear_programming" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Dec 05 15:41 PST

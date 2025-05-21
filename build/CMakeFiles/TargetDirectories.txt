@@ -1,0 +1,3 @@
+/data/home/amohs002/projects/research/SIRIUS_Lex/build/CMakeFiles/sirius.dir
+/data/home/amohs002/projects/research/SIRIUS_Lex/build/CMakeFiles/edit_cache.dir
+/data/home/amohs002/projects/research/SIRIUS_Lex/build/CMakeFiles/rebuild_cache.dir

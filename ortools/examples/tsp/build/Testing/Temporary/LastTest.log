@@ -1,0 +1,18 @@
+Start testing: Dec 05 15:42 PST
+----------------------------------------------------------
+1/1 Testing: test_tsp
+1/1 Test: test_tsp
+Command: "/home/amohs002/projects/research/SIRIUS/or-tools/examples/tsp/build/bin/tsp"
+Directory: /data/home/amohs002/projects/research/SIRIUS/or-tools/examples/tsp/build
+"test_tsp" start time: Dec 05 15:42 PST
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_tsp" end time: Dec 05 15:42 PST
+"test_tsp" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Dec 05 15:42 PST
