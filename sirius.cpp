@@ -492,6 +492,7 @@ class SIRIUSSolver
     // VectorBoolVariables all_mults;
     std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>> sequence_codons_list;
     VectorBoolVariables obj_mults;
+    std::vector<operations_research::sat::IntVar> additive_obj_mults;
     std::vector<int> prev_obj_vals;
     VectorBoolVariables constraint_obj_mults;
     VectorColumnYVars all_pairs_y_terms;
@@ -626,27 +627,36 @@ class SIRIUSSolver
     void build_model(const int current_priority)
     {
         std::cout << "Building model...\n";
+
         std::cout << "Creating base vars...\n";
         this->sequence_vars_list = add_base_variables();
+
         std::cout << "Creating codon constraints...\n";
-        // this->all_mults = add_codon_constraints();
         this->sequence_codons_list = add_codon_constraints();
+
         std::cout << "Creating symmetry breaking constraints...\n";
         add_codon_mult_anti_symmetry_constraints();
+
         std::cout << "Creating Y chained vars...\n";
         this->all_pairs_y_terms = create_y_chained_vars();
+
         std::cout << "Creating Z chained vars...\n";
         this->all_pairs_z_terms = create_z_chained_vars();
-        std::cout << "Creating objective...\n";
-        this->obj_mults = create_objective(current_priority);
-        std::cout << "Creating objectives and constraints...\n";
-        this->constraint_obj_mults = create_forward_chain_objectives_as_constraints(current_priority);
+
+        // std::cout << "Creating lex objective...\n";
+        // this->obj_mults = create_lex_objective(current_priority);
+
+        std::cout << "Creating additive objective...\n";
+        this->additive_obj_mults = create_additive_objective();
+
+        // std::cout << "Creating objectives and constraints...\n";
+        // this->constraint_obj_mults = create_forward_chain_lex_objectives_as_constraints(current_priority);
     }
 
     void set_minimize_objective_value()
     {
         std::cout << "Setting minimize objective...\n";
-        this->objective = operations_research::sat::LinearExpr::Sum(this->obj_mults);
+        this->objective = operations_research::sat::LinearExpr::Sum(this->additive_obj_mults);
         this->cp_model.Minimize(this->objective);
     }
 
@@ -733,8 +743,6 @@ class SIRIUSSolver
 
     std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>> add_codon_constraints()
     {
-        // VectorBoolVariables all_mults;
-
         std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>> sequence_codons_list;
 
         // Constraints for Valid Codons
@@ -755,20 +763,18 @@ class SIRIUSSolver
                     }
 
                     // std::cout << var_name << std::endl;
-
                     operations_research::sat::BoolVar mult = this->cp_model.NewBoolVar().WithName(var_name);
 
                     const int group_size = codon_vars_list.size();
                     operations_research::sat::LinearExpr group_sum = operations_research::sat::LinearExpr::Sum(codon_vars_list);
                     // Enforce bi-directional implication
                     this->cp_model.AddEquality(group_sum, group_size).OnlyEnforceIf(mult);
-                    this->cp_model.AddLessThan(group_sum, group_size).OnlyEnforceIf(~mult);
+                    this->cp_model.AddLessThan(group_sum, group_size).OnlyEnforceIf(mult.Not());
 
                     this->cp_model.AddEquality(operations_research::sat::LinearExpr::Sum(codon_vars_list), codon_vars_list.size() * mult);
 
                     this->all_vars.push_back(mult);
                     codon_mult_list.push_back(mult);
-                    // all_mults.push_back(mult);
                 }
 
                 if (!codon_mult_list.empty())
@@ -791,9 +797,7 @@ class SIRIUSSolver
 
         for (int k = 0; k < n_sequences - 1; ++k) {
             int seq_length = this->sequence_codons_list[k].size();
-
             std::vector<operations_research::sat::BoolVar> prefix_equal(seq_length);
-            
     
             for (int pos = 0; pos < seq_length; ++pos) {
                 // int wrap_around_i = 0;
@@ -825,7 +829,6 @@ class SIRIUSSolver
     
                 // Enforce lex ordering at this position
                 // Create ordering constraint: seq[k] <= seq[k+1]
-                // this->cp_model.AddImplication(prefix_equal[pos], lex_less_or_equal.Not());
                 this->cp_model.AddImplication(prefix_equal[pos].Not(), lex_less_or_equal);
 
                 bool jumped = false;
@@ -946,7 +949,31 @@ class SIRIUSSolver
         return all_pairs_z_terms;
     }
 
-    VectorBoolVariables create_objective(const int current_priority)
+    std::vector<operations_research::sat::IntVar> create_additive_objective()
+    {
+        std::vector<operations_research::sat::IntVar> factored_terms;
+
+        for (int i = 0; i < this->all_pairs_z_terms.size(); ++i) {
+            operations_research::sat::IntVar y = this->cp_model.NewIntVar({0, 1}).WithName(this->all_pairs_z_terms.at(i).front().Name());
+            this->cp_model.AddEquality(y, this->all_pairs_z_terms.at(i).front());
+            factored_terms.push_back(y);
+
+            for (int j = 1; j < this->all_pairs_z_terms.at(i).size(); ++j) {
+                operations_research::sat::BoolVar x = this->all_pairs_z_terms.at(i).at(j);
+                operations_research::sat::IntVar z = this->cp_model.NewIntVar({0, j + 1}).WithName(x.Name() + "(1 + " + y.Name() + ")");
+                
+                this->cp_model.AddEquality(z, 1 + y).OnlyEnforceIf(x);
+                this->cp_model.AddEquality(z, 0).OnlyEnforceIf(x.Not());
+                
+                y = z;
+                factored_terms.push_back(y);
+            }
+        }
+
+        return factored_terms;
+    }
+
+    VectorBoolVariables create_lex_objective(const int current_priority)
     {
         VectorBoolVariables all_mults;
 
@@ -984,7 +1011,7 @@ class SIRIUSSolver
         return all_mults;
     }
 
-    VectorBoolVariables create_forward_chain_objectives_as_constraints(const int current_priority)
+    VectorBoolVariables create_forward_chain_lex_objectives_as_constraints(const int current_priority)
     {
         int counter = 0;
         VectorBoolVariables constraint_obj_mults;
@@ -1063,6 +1090,7 @@ int main(int argc, char *argv[])
     // const std::string target_protein = "MVTGGMASKWDQKGMDIAYEEAALGYKEGGVPIGGCLIN";
     // const std::string target_protein = "MVTGGMASKWDQKGMDIAYEEAALGYKEGGVPIGGCLINNKDGSVLGRGHNMRFQKGSAT";
     // const std::string target_protein = "MVTGGMASKWDQKGMDIAYEEAALGYKEGGVPIGGCLINNKDGSVLGRGHNMRFQKGSATLHGEISTLENCGRLEGKVYKDTTLYTTLSPCDMCTGAIIMYGIPRCVVGENVNFKSKGEKYLQTRGHEVVVVDDERCKKIMKQFIDERPQDWFEDIGE**";
+    // const std::string threehundo     = "MTNSKEDADIEEKHMYNEPVTTLFHDVEASQTHHRRGSIPLKDEKSKELYPLRSFPTRVNGEDTFSMEDGIGDEDEGEVQNAEVKRELKQRHIGMIALGGTIGTGLFIGLSTPLTNAGPVGALISYLFMGSLAYSVTQSLGEMATFIPVTSSFTVFSQRFLSPAFGAANGYMYWFSWAITFALELSVVGQVIQFWTYKVPLAAWISIFWVIITIMNLFPVKYYGEFEFWVASIKVLAIIGFLIYCFCMVCGAGVTGPVGFRYWRNPGAWGPGIISKDKNEGRFLGWVSSLINAAFTFQGTELVGITAGEAANPRK";
     // const std::string target_can1    = "MTNSKEDADIEEKHMYNEPVTTLFHDVEASQTHHRRGSIPLKDEKSKELYPLRSFPTRVNGEDTFSMEDGIGDEDEGEVQNAEVKRELKQRHIGMIALGGTIGTGLFIGLSTPLTNAGPVGALISYLFMGSLAYSVTQSLGEMATFIPVTSSFTVFSQRFLSPAFGAANGYMYWFSWAITFALELSVVGQVIQFWTYKVPLAAWISIFWVIITIMNLFPVKYYGEFEFWVASIKVLAIIGFLIYCFCMVCGAGVTGPVGFRYWRNPGAWGPGIISKDKNEGRFLGWVSSLINAAFTFQGTELVGITAGEAANPRKSVPRAIKKVVFRILTFYIGSLLFIGLLVPYNDPKLTQSTSYVSTSPFIIAIENSGTKVLPHIFNAVILTTIISAANSNIYVGSRILFGLSKNKLAPKFLSRTTKGGVPYIAVFVTAAFGALAYMETSTGGDKVFEWLLNITGVAGFFAWLFISISHIRFMQALKYRGISRDELPFKAKLMPGLAYYAATFMTIIIIIQGFTAFAPKFNGVSFAAAYISIFLFLAVWILFQCIFRCRFIWKIGDVDIDSDRRDIEAIVWEDHEPKTFWDKFWNVVA*";
 
     int num_sequences;
@@ -1104,45 +1132,41 @@ int main(int argc, char *argv[])
     }
     
     SIRIUSTables tables;
-    SIRIUSConfig config(true, 100, 0, 0.05);
+    SIRIUSConfig config(true, 16, 0, 0);
     SIRIUSInstance instance(num_sequences, init_target_protein, tables, warm_start_path);
     SIRIUSSolver sirius_solver(instance, config, tables);
-    // int max_priority = sirius_solver.max_priority;
 
     int current_priority = instance.warm_start_largest_fragment_length;
 
-    if (use_warmstart)
-    {
+    // if (use_warmstart)
+    // {
+    //     sirius_solver.max_priority = current_priority;
+    // }
+    // else
+    // {
+    current_priority = sirius_solver.max_priority;
+    // }
 
-    }
-
-    // int current_priority = 1;
-    sirius_solver.max_priority = current_priority;
-    // current_priority = 1;
-
-    if (!use_warmstart)
-    {
-        current_priority = sirius_solver.max_priority;
-    }
+    current_priority = 1;
     
-    std::cout << "Max " << sirius_solver.max_priority << "\n";
-    std::cout << "Curr " << current_priority << "\n";
+    // std::cout << "Max " << sirius_solver.max_priority << "\n";
+    // std::cout << "Curr " << current_priority << "\n";
 
     std::queue<char> int_vars;
 
-    if (use_warmstart)
-    {
-        sirius_solver.init_new_model();
-        sirius_solver.set_larger_fragment_obj_vals_to_zero();
-        sirius_solver.build_model(current_priority);
-        sirius_solver.set_minimize_objective_value();
-        sirius_solver.set_all_var_vals_to_zero();
-        sirius_solver.assign_var_values_from_solution();
-        sirius_solver.solve_model();
-        sirius_solver.store_solution();
+    // if (use_warmstart)
+    // {
+    //     sirius_solver.init_new_model();
+    //     sirius_solver.set_larger_fragment_obj_vals_to_zero();
+    //     sirius_solver.build_model(current_priority);
+    //     sirius_solver.set_minimize_objective_value();
+    //     sirius_solver.set_all_var_vals_to_zero();
+    //     sirius_solver.assign_var_values_from_solution();
+    //     sirius_solver.solve_model();
+    //     sirius_solver.store_solution();
 
-        --current_priority;
-    }
+    //     --current_priority;
+    // }
     
     for (current_priority; current_priority > 0; --current_priority)
     {
