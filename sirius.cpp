@@ -635,7 +635,8 @@ class SIRIUSSolver
         this->sequence_codons_list = add_codon_constraints();
 
         std::cout << "Creating symmetry breaking constraints...\n";
-        add_codon_mult_anti_symmetry_constraints();
+        // add_codon_mult_anti_symmetry_constraints();
+        add_codon_mult_relaxed_anti_symmetry_constraints();
 
         std::cout << "Creating Y chained vars...\n";
         this->all_pairs_y_terms = create_y_chained_vars();
@@ -800,8 +801,6 @@ class SIRIUSSolver
             std::vector<operations_research::sat::BoolVar> prefix_equal(seq_length);
     
             for (int pos = 0; pos < seq_length; ++pos) {
-                // int wrap_around_i = 0;
-
                 // Determine if seq[k] and seq[k+1] codons at this position are equal
                 prefix_equal[pos] = this->cp_model.NewBoolVar();
                 int num_codons = this->sequence_codons_list[k][pos].size();
@@ -865,6 +864,159 @@ class SIRIUSSolver
                         ++c;
                     }
                 }
+            }
+        }
+    }
+
+    // Function courtesy of Google Gemini because there was steam coming out of my head figuring this out.
+    //
+    // Function to generate and print the sequence based on given inputs
+    // n_sequences: The total desired length of the output sequence.
+    // num_codons: The base length of the repeating pattern (e.g., 4 for '1 2 3 4').
+    std::vector<int> generateSequence(int n_sequences, int num_codons) {
+        std::vector<int> patterns;
+
+        // Calculate the number of full cycles of '1' to 'num_codons' that fit into n_sequences.
+        // For example, if n_sequences = 10 and num_codons = 4, num_full_cycles will be 2 (10 / 4 = 2).
+        int num_full_cycles = n_sequences / num_codons;
+
+        // Calculate the number of remaining elements after the full cycles.
+        // For example, if n_sequences = 10 and num_codons = 4, remainder_elements will be 2 (10 % 4 = 2).
+        int remainder_elements = n_sequences % num_codons;
+
+        // Loop through each position in the output sequence, from 0 up to n_sequences - 1.
+        // The loop iterates exactly n_sequences times to produce the desired number of elements.
+        for (int i = 0; i < n_sequences; ++i) {
+            int value_to_print; // Variable to store the calculated value for the current position
+
+            // Check if the current index 'i' falls within the range of the full cycles.
+            // This handles segments like '1 2 3 4' and '1 2 3 4' for n_sequences = 10, num_codons = 4.
+            if (i < num_full_cycles * num_codons) {
+                // For full cycles, the value is simply the current index modulo num_codons, plus 1.
+                // (i % num_codons) gives a 0-indexed value (0 to num_codons-1),
+                // adding 1 converts it to the 1-indexed values (1 to num_codons) shown in the output.
+                value_to_print = (i % num_codons) + 1;
+            } else {
+                // This 'else' block is executed only for the remaining elements after the full cycles.
+                // This part handles the "tail" pattern, like '3 4' for n_sequences = 10, num_codons = 4.
+
+                // Calculate the current position within this remainder segment (0-indexed).
+                // For example, if i=8 and num_full_cycles*num_codons = 8, current_k_in_remainder will be 0.
+                int current_k_in_remainder = i - (num_full_cycles * num_codons);
+
+                // Determine the starting offset for the cyclic pattern within the 1-to-num_codons sequence.
+                // This offset is derived from the observed output patterns in the image:
+                // - If 1 remainder element (e.g., n_sequences=5, num_codons=4), the offset is (4-1)=3,
+                //   meaning the cycle starts from the 4th element (value 4).
+                // - If 2 remainder elements (e.g., n_sequences=6, num_codons=4), the offset is (4-2)=2,
+                //   meaning the cycle starts from the 3rd element (value 3).
+                // - If 3 remainder elements (e.g., n_sequences=7, num_codons=4), the offset is (4-3)=1,
+                //   meaning the cycle starts from the 2nd element (value 2).
+                // This 'start_offset_for_remainder_0_indexed' represents the 0-indexed position
+                // within a '0, 1, ..., num_codons-1' sequence where the remainder segment effectively begins.
+                int start_offset_for_remainder_0_indexed = (num_codons - remainder_elements);
+
+                // Calculate the final value to print for the current position in the remainder.
+                // This uses the 'start_offset_for_remainder_0_indexed' and 'current_k_in_remainder'
+                // to cyclically pick elements from the 1-to-num_codons range.
+                // The modulo operator ensures the cycle repeats correctly.
+                // Adding 1 converts the 0-indexed result to the desired 1-indexed output values.
+                value_to_print = (start_offset_for_remainder_0_indexed + current_k_in_remainder) % num_codons + 1;
+            }
+
+            // Print the calculated value for the current position.
+            // std::cout << value_to_print;
+            patterns.push_back(value_to_print);
+
+            // Print a space after the number, unless it's the very last number in the sequence.
+            // This ensures numbers are separated by spaces but there isn't a trailing space.
+            // if (i < n_sequences - 1) {
+            //     std::cout << " ";
+            // }
+        }
+        // After printing all numbers, print a newline character to move to the next line
+        // for any subsequent output, ensuring clean formatting.
+        // std::cout << std::endl;
+        return patterns;
+    }
+
+    void add_codon_mult_relaxed_anti_symmetry_constraints()
+    {
+        int n_sequences = this->sequence_codons_list.size();
+
+        for (int k = 0; k < n_sequences - 1; ++k) {
+            int seq_length = this->sequence_codons_list[k].size();
+            std::vector<operations_research::sat::BoolVar> prefix_equal(seq_length);
+    
+            for (int pos = 0; pos < seq_length; ++pos) {
+                // Determine if seq[k] and seq[k+1] codons at this position are equal
+                prefix_equal[pos] = this->cp_model.NewBoolVar();
+                int num_codons = this->sequence_codons_list[k][pos].size();
+
+                std::vector<int> pattern_end_ranges = generateSequence(n_sequences, num_codons);
+    
+                // Equality at this position across all codon variables
+                std::vector<operations_research::sat::BoolVar> codon_equals;
+                for (int c = 0; c < num_codons; ++c) {
+                    operations_research::sat::BoolVar codon_match = cp_model.NewBoolVar();
+                    this->cp_model.AddEquality(this->sequence_codons_list[k][pos][c], this->sequence_codons_list[k+1][pos][c]).OnlyEnforceIf(codon_match);
+                    this->cp_model.AddNotEqual(this->sequence_codons_list[k][pos][c], this->sequence_codons_list[k+1][pos][c]).OnlyEnforceIf(codon_match.Not());
+                    codon_equals.push_back(codon_match);
+                }
+                // All codon bits must match to declare equality at this position
+                this->cp_model.AddBoolAnd(codon_equals).OnlyEnforceIf(prefix_equal[pos]);
+
+                std::vector<operations_research::sat::BoolVar> codon_differs;
+                for (const auto& eq : codon_equals) {
+                    codon_differs.push_back(eq.Not());
+                }
+                this->cp_model.AddBoolOr(codon_differs).OnlyEnforceIf(prefix_equal[pos].Not());
+
+                operations_research::sat::BoolVar lex_less_or_equal = this->cp_model.NewBoolVar();
+
+                // Ensures prefix_equal[pos] = AND(codon_equals)
+    
+                // Enforce lex ordering at this position
+                // Create ordering constraint: seq[k] <= seq[k+1]
+                this->cp_model.AddImplication(prefix_equal[pos].Not(), lex_less_or_equal);                
+                std::vector<operations_research::sat::BoolVar> selector_vars;  // one for each (i,j) pair
+
+                int selector_index = 0;
+
+                int i_wrapping_indexer = k % num_codons;
+                for (int i = i_wrapping_indexer; i < pattern_end_ranges.at(k); ++i)
+                {
+                    int j_wrapping_indexer = (i + 1) % num_codons;
+                    for (int j = j_wrapping_indexer; j < pattern_end_ranges.at(k + 1); ++j)
+                    {
+                        operations_research::sat::BoolVar selector = this->cp_model.NewBoolVar();
+                        selector_vars.push_back(selector);
+
+                        // Enforce the constraint group only if this selector is active
+                        this->cp_model.AddGreaterThan(this->sequence_codons_list[k][pos][i], this->sequence_codons_list[k + 1][pos][i])
+                                .OnlyEnforceIf({lex_less_or_equal, selector});
+
+                        this->cp_model.AddLessThan(this->sequence_codons_list[k][pos][j], this->sequence_codons_list[k + 1][pos][j])
+                                .OnlyEnforceIf({lex_less_or_equal, selector});
+
+                        for (int bi = 0; bi < num_codons; ++bi) {
+                            if (bi != i && bi != j) {
+                                this->cp_model.AddLessOrEqual(this->sequence_codons_list[k][pos][bi], this->sequence_codons_list[k + 1][pos][bi])
+                                        .OnlyEnforceIf({lex_less_or_equal, selector});
+                            }
+                        }
+                    }
+                }
+
+                // Create a dummy variable to accumulate the sum of selector_vars
+                operations_research::sat::LinearExpr selector_sum;
+                for (const auto& var : selector_vars) {
+                    selector_sum += var;
+                }
+
+                // selector_sum == 1 <=> exactly one selector is active
+                // Enforce this only if lex_less_or_equal is true
+                this->cp_model.AddEquality(selector_sum, 1).OnlyEnforceIf(lex_less_or_equal);
             }
         }
     }
