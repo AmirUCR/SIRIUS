@@ -1,5 +1,4 @@
 /****************************************************************/
-/*                    From the Sky - Gojira                     */
 /*                                                              */
 /*         LOST, I found there a stone erected in line          */
 /*  WITH ONE OF THE BRIGHTEST STARS OF ALL THE NIGHT SKY VAULT  */
@@ -10,6 +9,7 @@
 /*                Make passage for souls awaken                 */
 /*    So it returns to WHERE IT'S ALWAYS BEEN with the gods     */
 /*                                                              */
+/*                     From the Sky - Gojira                    */
 /****************************************************************/
 
 #include <map>
@@ -430,7 +430,7 @@ class SIRIUSSolver
 
     void build_model()
     {
-        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Build a model...\n";
+        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Construct a model...\n";
         // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Creating base vars...\n";
         this->sequence_vars_list = add_base_variables();
 
@@ -460,7 +460,7 @@ class SIRIUSSolver
 
     void solve_model()
     {
-        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Solve...\n";
+        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Solve an enigma...\n";
         this->response = SolveCpModel(cp_model.Build(), model.get());
         check_response(this->response);
     }
@@ -814,7 +814,7 @@ int main(int argc, char *argv[])
 
     if (argc >= 3) 
     {
-        bool valid;
+        bool valid = true;
         init_target_protein = argv[1];
         try
         {
@@ -846,7 +846,7 @@ int main(int argc, char *argv[])
             }
         }
     } else {
-        std::cout << BLUE << "> " << RESET << "Enter target protein: ";
+        std::cout << BLUE << "> " << RESET << "Gather your protein: ";
         std::cin >> init_target_protein;
 
         if (!validate_user_prot_input(init_target_protein, tables.reduced_codon_table))
@@ -855,7 +855,7 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        std::cout << BLUE << "> " << RESET << "Enter number of sequences: ";
+        std::cout << BLUE << "> " << RESET << "And the number of sequences: ";
         std::string num_input;
         std::cin >> num_input;
 
@@ -994,11 +994,11 @@ void print_inputs(const std::string& protein, int num_sequences)
         to_print += "...";
         to_print += protein.substr(protein.size() - 20);
 
-        std::cout << BLUE << "> " << RESET << "And in that star's heart forge " << num_sequences << "x " << to_print << std::endl;
+        std::cout << BLUE << "> " << RESET << "Then in that star's heart forge " << num_sequences << "x " << to_print << std::endl;
     }
     else
     {
-        std::cout << BLUE << "> " << RESET << "And in that star's heart forge " << num_sequences << "x " << protein << std::endl;
+        std::cout << BLUE << "> " << RESET << "Then in that star's heart forge " << num_sequences << "x " << protein << std::endl;
     }
 }
 
@@ -1219,6 +1219,10 @@ find_all_homologous_stretches_and_count_lengths(const std::vector<std::string> &
 
 void print_length_counts(const std::unordered_map<int, int>& length_counts, std::ostream* file_out)
 {
+    if (length_counts.empty()) {
+        return;  // Do not print anything if there are no counts
+    }
+    
     std::vector<std::pair<int, int>> sorted_counts(length_counts.begin(), length_counts.end());
 
     std::sort(sorted_counts.begin(), sorted_counts.end(),
