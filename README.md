@@ -3,6 +3,7 @@ SIRIUS (_<ins>S</ins>ystematische <ins>I</ins>dentifikation <ins>R</ins>edundant
 
 - Design _n_ gene sequences given a protein _P_
 - Extremely fast and computationally efficient
+- Synthesize sequences with maximal, optimal divergence
 - Written in pure C++
 
 # Documentation
