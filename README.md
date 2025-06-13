@@ -12,7 +12,7 @@ SIRIUS (_<ins>S</ins>ystematische <ins>I</ins>dentifikation <ins>R</ins>edundant
 You may find the documentation for SIRIUS at its [GitHub Wiki](https://github.com/AmirUCR/SIRIUS/wiki).
 
 # Support
-If you run into any issues or have suggestions for SIRIUS, please report them on our GitHub Issues tracker. It's the fastest way to get support and helps us improve SIRIUS for everyone.
+If you run into any issues or have suggestions for SIRIUS, please report them on our GitHub Issues tracker. It's the fastest way to get support and helps us improve SIRIUS for everyone. You may also email the authors at their provided e-mail addresses on the publication directly.
 
 # About
 SIRIUS has been developed and is maintained by <ins>Amir</ins>sadra Mohseni, and Stefano Lonardi at the University of California, Riverside.
