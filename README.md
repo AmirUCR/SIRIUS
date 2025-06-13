@@ -1,5 +1,5 @@
 # Introduction
-SIRIUS is a synthetic biology tool leveraging linear programming to design genetic sequences with the shortest and fewest possible homologous fragments between pairs.
+SIRIUS is a synthetic biology tool leveraging linear programming to design genetic sequences with the shortest and fewest possible homologous fragments between pairs. SIRIUS stands for _Systematische Identifikation Redundanter, Identisch Uebersetzter Sequenzen_.
 
 - Design _n_ gene sequences given a protein _P_
 - Extremely fast and computationally efficient
