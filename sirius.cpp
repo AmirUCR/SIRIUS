@@ -1,3 +1,16 @@
+/****************************************************************/
+/*                    From the Sky - Gojira                     */
+/*                                                              */
+/*         LOST, I found there a stone erected in line          */
+/*  WITH ONE OF THE BRIGHTEST STARS OF ALL THE NIGHT SKY VAULT  */
+/*            And I took my time, took off the moss             */
+/*      Washed away the dust and gave A NEW LEASE OF LIFE       */
+/*                      Its MYSTICAL FORCE                      */
+/*    I grab it now and praise this lord of earth and stone     */
+/*                Make passage for souls awaken                 */
+/*    So it returns to WHERE IT'S ALWAYS BEEN with the gods     */
+/*                                                              */
+/****************************************************************/
 
 #include <map>
 #include <queue>
@@ -790,21 +803,6 @@ class SIRIUSSolver
 
 int main(int argc, char *argv[])
 {
-    /*
-       I do feel like NO ONE CAN SAVE ME I AM SO ALONE
-       And yet I CRIED, I called for HELP, FORSAKEN
-       But now I know the only way is UNDERSTAND THE LIVING
-       OBEY THE RULE OF LIGHT and FACE THE FEAR inside out.
-       LOST, I found there a stone erected in line
-       WITH ONE OF THE BRIGHTEST STARS OF ALL THE NIGHT SKY VAULT
-       And I took my time, took off the moss
-       Washed away the dust and gave A NEW LEASE OF LIFE
-       Its MYSTICAL FORCE
-       I grab it now and praise this lord of earth and stone
-       Make passage for souls awaken
-       So it returns to WHERE IT'S ALWAYS BEEN with the gods
-    */
-
     // Systematische Identifikation Redundanter, Identisch Uebersetzter Sequenzen
     ::google::InitGoogleLogging("SIRIUS");
     std::cout << BLUE << "> " << RESET << "Fly to " << BLUE << "SIRIUS" << RESET << std::endl;
