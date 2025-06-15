@@ -20,6 +20,7 @@
 #include <string>
 #include <chrono>
 #include <random>
+#include <utility>
 #include <iomanip>
 #include <sstream>
 #include <fstream>
@@ -67,35 +68,34 @@ class SIRIUSSolver;
 // --------------------------
 
 // FUNCTION DECLARATIONS
-void scan_for_quiet_flag(int argc, char* argv[]);
-void print_info(const std::string& message);
-void print_info_newline(const std::string& message);
-void print_warning(const std::string& message);
-void print_warning_newline(const std::string& message);
-void print_error(const std::string& message);
-void print_error_newline(const std::string& message);
-std::string format_error(const std::string& message);
-[[noreturn]] void throw_formatted_error(const std::string& message);
+void scan_for_quiet_flag(int argc, char *argv[]);
+void print_info(const std::string &message);
+void print_info_newline(const std::string &message);
+void print_warning(const std::string &message);
+void print_warning_newline(const std::string &message);
+void print_error(const std::string &message);
+void print_error_newline(const std::string &message);
+std::string format_error(const std::string &message);
+[[noreturn]] void throw_formatted_error(const std::string &message);
 
-
-void validate_user_prot_input(const std::string& protein,
-                              const std::unordered_map<char, std::vector<std::string>>& reduced_codon_table);
+void validate_user_prot_input(const std::string &protein,
+                              const std::unordered_map<char, std::vector<std::string>> &reduced_codon_table);
 void validate_user_num_seq_input(int num_sequences);
-void print_inputs(const std::string& protein, int num_sequences);
+void print_inputs(const std::string &protein, int num_sequences);
 
 // SIRIUSInstance gather_inputs_from_yaml(const std::string& path, const SIRIUSTables& tables);
-SIRIUSInstance gather_inputs_from_flags(int argc, char* argv[], const SIRIUSTables& tables);
-SIRIUSInstance gather_inputs_interactively(SIRIUSTables& tables);
+std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char *argv[], const SIRIUSTables &tables);
+std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_interactively(SIRIUSTables &tables);
 
 std::string elapsed_since_start();
-std::string create_output_folder(const std::string& base = "sirius_out");
-std::string timestamped_filename(const std::string& prefix);
-std::string generate_unique_filename(const std::string& base_name);
-void write_sequences_to_file_and_console(const std::vector<std::string>& sequences,
-                                         const std::string& base_filename = "sirius_out.txt");
-void validate_translated_proteins(const std::vector<std::string>& sequences,
-                                  const std::string& target_protein,
-                                  const SIRIUSTables& tables);
+std::string create_output_folder(const std::string &base = "sirius_out");
+std::string timestamped_filename(const std::string &prefix);
+std::string generate_unique_filename(const std::string &base_name);
+void write_sequences_to_file_and_console(const std::vector<std::string> &sequences,
+                                         const std::string &base_filename = "sirius_out.txt");
+void validate_translated_proteins(const std::vector<std::string> &sequences,
+                                  const std::string &target_protein,
+                                  const SIRIUSTables &tables);
 std::string translate_dna_to_protein(const std::string &dna, const SIRIUSTables &tables);
 
 std::vector<std::vector<operations_research::sat::BoolVar>> generate_combinations(
@@ -104,8 +104,8 @@ std::vector<std::vector<operations_research::sat::BoolVar>> generate_combination
 std::vector<Stretch> find_homologous_stretches(const std::string &seq1, const std::string &seq2);
 
 std::pair<std::map<std::string, std::vector<Stretch>>, std::unordered_map<int, int>>
-    find_all_homologous_stretches_and_count_lengths(const std::vector<std::string> &sequences);
-void print_length_counts(const std::unordered_map<int, int>& length_counts, std::ostream* file_out = nullptr);
+find_all_homologous_stretches_and_count_lengths(const std::vector<std::string> &sequences);
+void print_length_counts(const std::unordered_map<int, int> &length_counts, std::ostream *file_out = nullptr);
 void check_response(const operations_research::sat::CpSolverResponse &response);
 // ---------------------
 
@@ -138,80 +138,31 @@ public:
         {'*', "T__"}  // {"TAA", "TAG", "TGA"}
     };
 
-    // std::unordered_map<char, std::string> invariant_codon_table = {
-    //     {'A', "___"}, // {"GCT", "GCC", "GCA", "GCG"}
-    //     {'C', "___"}, // {"TGT", "TGC"}
-    //     {'D', "___"}, // {"GAT", "GAC"}
-    //     {'E', "___"}, // {"GAA", "GAG"}
-    //     {'F', "___"}, // {"TTT", "TTC"}
-    //     {'G', "___"}, // {"GGT", "GGC", "GGA", "GGG"}
-    //     {'H', "___"}, // {"CAT", "CAC"}
-    //     {'I', "___"}, // {"ATT", "ATC", "ATA"}
-    //     {'K', "___"}, // {"AAA", "AAG"}
-    //     {'L', "___"}, // {"TTA", "TTG", "CTT", "CTC", "CTA", "CTG"}
-    //     {'M', "___"},
-    //     {'N', "___"}, // {"AAT", "AAC"}
-    //     {'P', "___"}, // {"CCT", "CCC", "CCA", "CCG"}
-    //     {'Q', "___"}, // {"CAA", "CAG"}
-    //     {'R', "___"}, // {"CGT", "CGC", "CGA", "CGG", "AGA", "AGG"}
-    //     {'S', "___"}, // {"TCT", "TCC", "TCA", "TCG", "AGT", "AGC"}
-    //     {'T', "___"}, // {"ACT", "ACC", "ACA", "ACG"}
-    //     {'V', "___"}, // {"GTT", "GTC", "GTA", "GTG"}
-    //     {'W', "___"}, // TGG
-    //     {'Y', "___"}, // {"TAT", "TAC"}
-    //     {'*', "___"}  // {"TAA", "TAG", "TGA"}
-    // };
-
     std::set<char> skip_aa = {'M', 'W'};
-    // std::set<char> skip_aa = {};
-
+    
     std::unordered_map<char, std::vector<std::string>> reduced_codon_table = {
         {'A', {"A", "C", "G", "T"}},                       // {"GCT", "GCC", "GCA", "GCG"}
         {'C', {"C", "T"}},                                 // {"TGT", "TGC"}
         {'D', {"C", "T"}},                                 // {"GAT", "GAC"}
         {'E', {"A", "G"}},                                 // {"GAA", "GAG"}
         {'F', {"C", "T"}},                                 // {"TTT", "TTC"}
-        {'G', {"A", "C", "G", "T"}},                     // {"GGT", "GGC", "GGA", "GGG"}
+        {'G', {"A", "C", "G", "T"}},                       // {"GGT", "GGC", "GGA", "GGG"}
         {'H', {"C", "T"}},                                 // {"CAT", "CAC"}
         {'I', {"A", "C", "T"}},                            // {"ATT", "ATC", "ATA"}
         {'K', {"A", "G"}},                                 // {"AAA", "AAG"}
         {'L', {"CA", "CC", "CG", "CT", "TA", "TG"}},       // {"TTA", "TTG", "CTT", "CTC", "CTA", "CTG"}
         {'M', {""}},                                       // {"ATG"}
         {'N', {"C", "T"}},                                 // {"AAT", "AAC"}
-        {'P', {"A", "C", "G", "T"}},                        // {"CCT", "CCC", "CCA", "CCG"}
+        {'P', {"A", "C", "G", "T"}},                       // {"CCT", "CCC", "CCA", "CCG"}
         {'Q', {"A", "G"}},                                 // {"CAA", "CAG"}
         {'R', {"CT", "CC", "CA", "CG", "AA", "AG"}},       // {"CGT", "CGC", "CGA", "CGG", "AGA", "AGG"}
         {'S', {"AGC", "AGT", "TCA", "TCC", "TCG", "TCT"}}, // {"TCT", "TCC", "TCA", "TCG", "AGT", "AGC"}
-        {'T', {"A", "C", "G", "T"}},                     // {"ACT", "ACC", "ACA", "ACG"}
-        {'V', {"A", "C", "G", "T"}},                     // {"GTT", "GTC", "GTA", "GTG"}},
+        {'T', {"A", "C", "G", "T"}},                       // {"ACT", "ACC", "ACA", "ACG"}
+        {'V', {"A", "C", "G", "T"}},                       // {"GTT", "GTC", "GTA", "GTG"}},
         {'W', {""}},                                       // {"TGG"}
         {'Y', {"C", "T"}},                                 // {"TAT", "TAC"}},
         {'*', {"AA", "AG", "GA"}}                          // {"TAA", "TAG", "TGA"}
     };
-
-    // std::unordered_map<char, std::vector<std::string>> reduced_codon_table = {
-    //     {'A', {"GCA", "GCC", "GCG", "GCT"}},                       // {"GCT", "GCC", "GCA", "GCG"}
-    //     {'C', {"TGC", "TGT"}},                                 // {"TGT", "TGC"}
-    //     {'D', {"GAC", "GAT"}},                                 // {"GAT", "GAC"}
-    //     {'E', {"GAA", "GAG"}},                                 // {"GAA", "GAG"}
-    //     {'F', {"TTC", "TTT"}},                                 // {"TTT", "TTC"}
-    //     {'G', {"GGA", "GGC", "GGG", "GGT"}},                       // {"GGT", "GGC", "GGA", "GGG"}
-    //     {'H', {"CAC", "CAT"}},           // {"CAT", "CAC"}
-    //     {'I', {"ATA", "ATC", "ATT"}},                            // {"ATT", "ATC", "ATA"}
-    //     {'K', {"AAA", "AAG"}},                                 // {"AAA", "AAG"}
-    //     {'L', {"CTA", "CTC", "CTG", "CTT", "TTA", "TTG"}},       // {"TTA", "TTG", "CTT", "CTC", "CTA", "CTG"}
-    //     {'M', {"ATG"}},                                       // {"ATG"}
-    //     {'N', {"AAC", "AAT"}},                                 // {"AAT", "AAC"}
-    //     {'P', {"CCA", "CCC", "CCG", "CCT"}},                       // {"CCT", "CCC", "CCA", "CCG"}
-    //     {'Q', {"CAA", "CAG"}},                                 // {"CAA", "CAG"}
-    //     {'R', {"AGA", "AGG", "CGA", "CGC", "CGG", "CGT"}},       // {"CGT", "CGC", "CGA", "CGG", "AGA", "AGG"}
-    //     {'S', {"AGC", "AGT", "TCA", "TCC", "TCG", "TCT"}}, // {"TCT", "TCC", "TCA", "TCG", "AGT", "AGC"}
-    //     {'T', {"ACA", "ACC", "ACG", "ACT"}},                       // {"ACT", "ACC", "ACA", "ACG"}
-    //     {'V', {"GTA", "GTC", "GTG", "GTT"}},                       // {"GTT", "GTC", "GTA", "GTG"}},
-    //     {'W', {"TGG"}},                                       // {"TGG"}
-    //     {'Y', {"TAC", "TAT"}},                                 // {"TAT", "TAC"}},
-    //     {'*', {"TAA", "TAG", "TGA"}}                          // {"TAA", "TAG", "TGA"}
-    // };
 
     std::unordered_map<char, int> reduced_codon_lengths_table = {
         {'A', 1},
@@ -234,31 +185,7 @@ public:
         {'V', 1},
         {'W', 0},
         {'Y', 1},
-        {'*', 2}
-    };
-
-    // std::unordered_map<char, int> reduced_codon_lengths_table = {
-    //     {'A', 3},
-    //     {'C', 3},
-    //     {'D', 3},
-    //     {'E', 3},
-    //     {'F', 3},
-    //     {'G', 3},
-    //     {'H', 3},
-    //     {'I', 3},
-    //     {'K', 3},
-    //     {'L', 3},
-    //     {'M', 3},
-    //     {'N', 3},
-    //     {'P', 3},
-    //     {'Q', 3},
-    //     {'R', 3},
-    //     {'S', 3},
-    //     {'T', 3},
-    //     {'V', 3},
-    //     {'W', 3},
-    //     {'Y', 3},
-    //     {'*', 3}};
+        {'*', 2}};
 
     std::unordered_map<std::string, char> translate_codon_table = {
         // Phenylalanine
@@ -345,21 +272,22 @@ public:
         // Stop codons
         {"TAA", '*'},
         {"TAG", '*'},
-        {"TGA", '*'}
-    };
+        {"TGA", '*'}};
 
-    void build_rscu_map_from_csv(const std::string& filename)
+    void build_rscu_map_from_csv(const std::string &filename)
     {
         std::ifstream infile(filename);
-        if (!infile.is_open()) {
-            throw_formatted_error("Error: Can't open RSCU CSV file.");
+        if (!infile.is_open())
+        {
+            throw_formatted_error("Error: Cannot open RSCU CSV file.");
         }
 
         std::string line;
         std::getline(infile, line); // Skip header
         int line_number = 1;
 
-        while (std::getline(infile, line)) {
+        while (std::getline(infile, line))
+        {
             ++line_number;
 
             std::stringstream ss(line);
@@ -372,33 +300,41 @@ public:
             std::getline(ss, rscu_str, ','); // RSCU
             std::getline(ss, tmp3, ',');     // GC3
 
-            if (aa_str.empty() || codon.size() != 3 || rscu_str.empty()) {
+            if (aa_str.empty() || codon.size() != 3 || rscu_str.empty())
+            {
                 throw_formatted_error("Error: Malformed RSCU CSV line " + std::to_string(line_number) + ": " + line);
             }
 
             char aa = aa_str[0];
             double rscu = 0.0;
-            try {
+            try
+            {
                 rscu = std::stod(rscu_str);
-            } catch (const std::invalid_argument&) {
+            }
+            catch (const std::invalid_argument &)
+            {
                 throw_formatted_error("Error: RSCU value on line " + std::to_string(line_number) + " could not be converted.");
             }
 
             auto it = this->invariant_codon_table.find(aa);
-            if (it == this->invariant_codon_table.end()) {
+            if (it == this->invariant_codon_table.end())
+            {
                 throw_formatted_error("Error: Amino acid '" + std::to_string(aa) + "' on line " + std::to_string(line_number) + " is unknown.");
             }
 
-            const std::string& pattern = it->second;
+            const std::string &pattern = it->second;
             std::string varying_part;
 
-            for (size_t i = 0; i < pattern.size(); ++i) {
-                if (pattern[i] == '_') {
+            for (size_t i = 0; i < pattern.size(); ++i)
+            {
+                if (pattern[i] == '_')
+                {
                     varying_part += codon[i];
                 }
             }
 
-            if (!varying_part.empty()) {
+            if (!varying_part.empty())
+            {
                 this->rscu_map[aa][varying_part] = rscu;
             }
         }
@@ -436,18 +372,18 @@ public:
         bool hard_filter_by_rscu,
         bool soft_filter_by_rscu)
         : n(n),
-        init_target_protein(std::move(init_target_protein)),
-        tables(std::move(tables)),
-        codon_usage_path(std::move(codon_usage_path)),
-        rscu_threshold(rscu_threshold),
-        rscu_alpha(rscu_alpha),
-        max_low_rscu_ratio(max_low_rscu_ratio),
-        hard_filter_by_rscu(hard_filter_by_rscu),
-        soft_filter_by_rscu(soft_filter_by_rscu)
+          init_target_protein(std::move(init_target_protein)),
+          tables(std::move(tables)),
+          codon_usage_path(std::move(codon_usage_path)),
+          rscu_threshold(rscu_threshold),
+          rscu_alpha(rscu_alpha),
+          max_low_rscu_ratio(max_low_rscu_ratio),
+          hard_filter_by_rscu(hard_filter_by_rscu),
+          soft_filter_by_rscu(soft_filter_by_rscu)
     {
         std::transform(
-            this->init_target_protein.begin(), 
-            this->init_target_protein.end(), 
+            this->init_target_protein.begin(),
+            this->init_target_protein.end(),
             this->init_target_protein.begin(), ::toupper);
 
         this->dna_with_holes = "";
@@ -459,7 +395,7 @@ public:
             dna_with_holes += this->tables.invariant_codon_table[c];
 
             if (this->tables.skip_aa.find(c) == this->tables.skip_aa.end())
-            {   // if c not in skip_aa
+            { // if c not in skip_aa
                 decidable_protein += c;
                 ++decidable_protein_length;
             }
@@ -472,6 +408,7 @@ class SIRIUSConfig
 {
 public:
     operations_research::sat::SatParameters parameters;
+    SIRIUSConfig() = default;
 
     SIRIUSConfig(
         bool log_search_progress,
@@ -490,10 +427,10 @@ public:
 
 class SIRIUSSolver
 {
-    public:
+public:
     std::mt19937 gen;
     std::uniform_real_distribution<> dis;
-    
+
     SIRIUSTables tables;
     SIRIUSConfig config;
     SIRIUSInstance instance;
@@ -516,14 +453,15 @@ class SIRIUSSolver
     VectorSequenceAminoacidCodonBoolVariables sequence_vars_list;
     std::vector<operations_research::sat::IntVar> additive_obj_mults;
     std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>> sequence_codons_list;
-    
+
     SIRIUSSolver(SIRIUSInstance instance, SIRIUSConfig config, SIRIUSTables tables)
         : instance(std::move(instance)),
           config(std::move(config)),
           tables(std::move(tables)),
           model(std::make_unique<operations_research::sat::Model>()),
           cp_model(),
-          gen(42), dis(0.0, 1.0) // todo make injectable - with alpha and thresh
+          gen(std::random_device{}()), // gen(42), // todo make injectable
+          dis(0.0, 1.0)
     {
         this->codon_len = 3;
         this->dna_with_holes = "";
@@ -537,7 +475,6 @@ class SIRIUSSolver
 
     void init_new_model()
     {
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Initializing a new model...\n";
         cp_model = operations_research::sat::CpModelBuilder();
         model = std::make_unique<operations_research::sat::Model>();
         model->Add(operations_research::sat::NewSatParameters(this->config.parameters));
@@ -545,25 +482,28 @@ class SIRIUSSolver
 
     void build_model()
     {
-        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Construct a model...\n";
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Creating base vars...\n";
+        print_info_newline("[" + elapsed_since_start() + "] Construct a model...");
+        // print_info_newline("[" + elapsed_since_start() + "] Creating base vars...");
         this->sequence_vars_list = (this->instance.hard_filter_by_rscu || this->instance.soft_filter_by_rscu)
-                                 ? add_base_variables_from_rscu() 
-                                 : add_base_variables_from_prot();
+                                       ? add_base_variables_from_rscu()
+                                       : add_base_variables_from_prot();
 
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Creating codon constraints...\n";
+        // print_info_newline("[" + elapsed_since_start() + "] Creating codon constraints...");
         this->sequence_codons_list = add_codon_constraints();
 
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Creating symmetry breaking constraints...\n";
-        add_codon_mult_relaxed_anti_symmetry_constraints();
+        // print_info_newline("[" + elapsed_since_start() + "] Creating symmetry breaking constraints...");
+        if (!this->instance.soft_filter_by_rscu)
+        {
+            add_codon_mult_relaxed_anti_symmetry_constraints();
+        }
 
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Creating Y chained vars...\n";
+        // print_info_newline("[" + elapsed_since_start() + "] Creating Y chained vars...");
         this->all_pairs_y_terms = create_y_chained_vars();
 
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Creating Z chained vars...\n";
+        // print_info_newline("[" + elapsed_since_start() + "] Creating Z chained vars...");
         this->all_pairs_z_terms = create_z_chained_vars();
 
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Creating additive objective...\n";
+        // print_info_newline("[" + elapsed_since_start() + "] Creating additive objective...");
         this->additive_obj_mults = create_additive_objective();
     }
 
@@ -588,20 +528,17 @@ class SIRIUSSolver
         std::unordered_map<char, std::unordered_map<std::string, int>> num_issued_codons;
         std::unordered_map<char, std::unordered_map<std::string, int>> max_allowed_per_codon;
         std::vector<std::vector<std::string>> sequence_codons(this->decidable_protein_length);
+        std::unordered_set<char> unique_aminoacids(this->decidable_protein.begin(), this->decidable_protein.end());
 
-        for (const auto& [aa, codons] : this->tables.reduced_codon_table) {
-            for (const std::string& codon : codons) {
-                num_issued_codons[aa][codon] = 0;
-            }
-        }
-
-        for (const auto& [aa, codon_list] : this->tables.reduced_codon_table)
+        for (const char &aa : unique_aminoacids)
         {
             int count_of_aa = std::count(this->decidable_protein.begin(), this->decidable_protein.end(), aa);
 
-            for (const std::string& codon : codon_list)
+            for (const std::string &codon : this->tables.reduced_codon_table.at(aa))
             {
                 double rscu = this->tables.rscu_map.at(aa).at(codon);
+
+                num_issued_codons[aa][codon] = 0;
 
                 // Marked for Russian roulette!
                 if (rscu < this->instance.rscu_threshold)
@@ -621,10 +558,8 @@ class SIRIUSSolver
         }
 
         // Go through each aa and its positions
-        for (auto & it : aa_to_positions) {
-            char aa = it.first;
-            std::vector<int> positions = it.second;
-
+        for (auto &[aa, positions] : aa_to_positions)
+        {
             // Random shuffle so we don't run out of
             // low-RSCU codons by the end of the protein
             std::shuffle(positions.begin(), positions.end(), this->gen);
@@ -664,9 +599,9 @@ class SIRIUSSolver
                         {
                             continue;
                         }
-                    }
 
-                    num_issued_codons.at(aa).at(codon) += 1;
+                        num_issued_codons.at(aa).at(codon) += 1;
+                    }
 
                     codons.push_back(codon);
                     at_least_one_passed = true;
@@ -675,12 +610,13 @@ class SIRIUSSolver
                 // If nothing passes the threshold, add the codon w/ highest RSCU
                 if (!at_least_one_passed)
                 {
-                    // std::cout << ORANGE << "> " << RESET
-                    //     << "Warning: None of the codons for amino acid "
-                    //     << aa << " pass the set RSCU threshold (" 
-                    //     << this->instance.rscu_threshold << "). Letting " 
+                    // std::ostringstream oss;
+                    // oss << "Warning: None of the codons for amino acid "
+                    //     << aa << " position " << std::to_string(p + 1) << " pass the set RSCU threshold ("
+                    //     << this->instance.rscu_threshold << "). Letting "
                     //     << codon_w_largest_rscu << " with the largest RSCU ("
-                    //     << largest_rscu << ") through.\n";
+                    //     << largest_rscu << ") through.";
+                    // print_warning_newline(oss.str());
 
                     codons.push_back(codon_w_largest_rscu);
                 }
@@ -740,13 +676,11 @@ class SIRIUSSolver
 
     std::vector<std::vector<std::string>> generate_sequence_codons_with_rscu()
     {
-        return (this->instance.soft_filter_by_rscu) ? 
-            generate_sequence_codons_with_soft_rscu() : generate_sequence_codons_with_hard_rscu();
+        return (this->instance.soft_filter_by_rscu) ? generate_sequence_codons_with_soft_rscu() : generate_sequence_codons_with_hard_rscu();
     }
 
     VectorSequenceAminoacidCodonBoolVariables add_base_variables_from_rscu()
     {
-        std::cout << "CHECK\n";
         // Variables for each base
         VectorSequenceAminoacidCodonBoolVariables sequence_vars_list;
 
@@ -786,7 +720,6 @@ class SIRIUSSolver
             sequence_vars_list.push_back(this_sequence_vars_list_of_list);
         }
 
-        std::cout << "LOL\n";
         return sequence_vars_list;
     }
 
@@ -883,60 +816,23 @@ class SIRIUSSolver
         return sequence_codons_list;
     }
 
-    // std::vector<int> generate_sequence(int n_sequences, int num_codons) {
-    //     std::vector<int> patterns;
-
-    //     int n_full_cycles = n_sequences / num_codons;
-    //     int n_remainder_elements = n_sequences % num_codons;
-        
-    //     if (n_full_cycles == 0)
-    //     {
-    //         std::vector<int> temp;
-            
-    //         for (int i = 1; i < num_codons + 1; ++i)
-    //         {
-    //             temp.push_back(i);
-    //         }
-            
-    //         for (int i = num_codons - n_remainder_elements; i < num_codons; ++i)
-    //         {
-    //             patterns.push_back(temp.at(i));
-    //         }
-    //     }
-    //     else
-    //     {
-    //         for (int i = 0; i < n_full_cycles; ++i)
-    //         {
-    //             for (int j = 1; j < num_codons + 1; ++j)
-    //             {
-    //                 patterns.push_back(j);
-    //             }
-    //         }
-            
-    //         for (int i = num_codons - n_remainder_elements; i < num_codons; ++i)
-    //         {
-    //             patterns.push_back(patterns.at(i));
-    //         }
-    //     }
-
-    //     return patterns;
-    // }
-
-    // Function is the same as the commented above, optimized version here courtesy of ChatGPT
-    std::vector<int> generate_sequence(int n_sequences, int num_codons) {
+    std::vector<int> generate_sequence(int n_sequences, int num_codons)
+    {
         std::vector<int> patterns;
 
         int n_full_cycles = n_sequences / num_codons;
         int n_remainder_elements = n_sequences % num_codons;
 
         // Add full cycles of 1..num_codons
-        for (int i = 0; i < n_full_cycles * num_codons; ++i) {
+        for (int i = 0; i < n_full_cycles * num_codons; ++i)
+        {
             patterns.push_back(i % num_codons + 1);
         }
 
         // Handle remainder by reusing the tail from the last full cycle (or base sequence if none)
         int offset = num_codons - n_remainder_elements;
-        for (int i = offset; i < num_codons; ++i) {
+        for (int i = offset; i < num_codons; ++i)
+        {
             patterns.push_back(i + 1);
         }
 
@@ -947,30 +843,34 @@ class SIRIUSSolver
     {
         int n_sequences = this->sequence_codons_list.size();
 
-        for (int k = 0; k < n_sequences - 1; ++k) {
+        for (int k = 0; k < n_sequences - 1; ++k)
+        {
             int seq_length = this->sequence_codons_list[k].size();
             std::vector<operations_research::sat::BoolVar> prefix_equal(seq_length);
-    
-            for (int pos = 0; pos < seq_length; ++pos) {
+
+            for (int pos = 0; pos < seq_length; ++pos)
+            {
                 // Determine if seq[k] and seq[k+1] codons at this position are equal
                 prefix_equal[pos] = this->cp_model.NewBoolVar();
                 int num_codons = this->sequence_codons_list[k][pos].size();
 
                 std::vector<int> pattern_end_ranges = generate_sequence(n_sequences, num_codons);
-    
+
                 // Equality at this position across all codon variables
                 std::vector<operations_research::sat::BoolVar> codon_equals;
-                for (int c = 0; c < num_codons; ++c) {
+                for (int c = 0; c < num_codons; ++c)
+                {
                     operations_research::sat::BoolVar codon_match = cp_model.NewBoolVar();
-                    this->cp_model.AddEquality(this->sequence_codons_list[k][pos][c], this->sequence_codons_list[k+1][pos][c]).OnlyEnforceIf(codon_match);
-                    this->cp_model.AddNotEqual(this->sequence_codons_list[k][pos][c], this->sequence_codons_list[k+1][pos][c]).OnlyEnforceIf(codon_match.Not());
+                    this->cp_model.AddEquality(this->sequence_codons_list[k][pos][c], this->sequence_codons_list[k + 1][pos][c]).OnlyEnforceIf(codon_match);
+                    this->cp_model.AddNotEqual(this->sequence_codons_list[k][pos][c], this->sequence_codons_list[k + 1][pos][c]).OnlyEnforceIf(codon_match.Not());
                     codon_equals.push_back(codon_match);
                 }
                 // All codon bits must match to declare equality at this position
                 this->cp_model.AddBoolAnd(codon_equals).OnlyEnforceIf(prefix_equal[pos]);
 
                 std::vector<operations_research::sat::BoolVar> codon_differs;
-                for (const auto& eq : codon_equals) {
+                for (const auto &eq : codon_equals)
+                {
                     codon_differs.push_back(eq.Not());
                 }
                 this->cp_model.AddBoolOr(codon_differs).OnlyEnforceIf(prefix_equal[pos].Not());
@@ -980,8 +880,8 @@ class SIRIUSSolver
                 // Ensures prefix_equal[pos] = AND(codon_equals)
                 // Enforce lex ordering at this position
                 // Create ordering constraint: seq[k] <= seq[k+1]
-                this->cp_model.AddImplication(prefix_equal[pos].Not(), lex_less_or_equal);                
-                std::vector<operations_research::sat::BoolVar> selector_vars;  // one for each (i,j) pair
+                this->cp_model.AddImplication(prefix_equal[pos].Not(), lex_less_or_equal);
+                std::vector<operations_research::sat::BoolVar> selector_vars; // one for each (i,j) pair
 
                 int selector_index = 0;
 
@@ -996,15 +896,17 @@ class SIRIUSSolver
 
                         // Enforce the constraint group only if this selector is active
                         this->cp_model.AddGreaterThan(this->sequence_codons_list[k][pos][i], this->sequence_codons_list[k + 1][pos][i])
-                                .OnlyEnforceIf({lex_less_or_equal, selector});
+                            .OnlyEnforceIf({lex_less_or_equal, selector});
 
                         this->cp_model.AddLessThan(this->sequence_codons_list[k][pos][j], this->sequence_codons_list[k + 1][pos][j])
-                                .OnlyEnforceIf({lex_less_or_equal, selector});
+                            .OnlyEnforceIf({lex_less_or_equal, selector});
 
-                        for (int bi = 0; bi < num_codons; ++bi) {
-                            if (bi != i && bi != j) {
+                        for (int bi = 0; bi < num_codons; ++bi)
+                        {
+                            if (bi != i && bi != j)
+                            {
                                 this->cp_model.AddLessOrEqual(this->sequence_codons_list[k][pos][bi], this->sequence_codons_list[k + 1][pos][bi])
-                                        .OnlyEnforceIf({lex_less_or_equal, selector});
+                                    .OnlyEnforceIf({lex_less_or_equal, selector});
                             }
                         }
                     }
@@ -1012,7 +914,8 @@ class SIRIUSSolver
 
                 // Create a dummy variable to accumulate the sum of selector_vars
                 operations_research::sat::LinearExpr selector_sum;
-                for (const auto& var : selector_vars) {
+                for (const auto &var : selector_vars)
+                {
                     selector_sum += var;
                 }
 
@@ -1039,17 +942,17 @@ class SIRIUSSolver
                     {
                         operations_research::sat::LinearExpr y_terms;
 
-                        for (size_t codon_position_i = 0; codon_position_i < this->tables.reduced_codon_table.at(this->decidable_protein.at(aa_pos_i)).size(); ++codon_position_i)
+                        for (size_t codon_position_i = 0; codon_position_i < this->sequence_vars_list.at(s).at(aa_pos_i).size(); ++codon_position_i)
                         {
                             operations_research::sat::BoolVar x = this->sequence_vars_list.at(s).at(aa_pos_i).at(codon_position_i).at(codon_i);
 
-                            for (size_t codon_position_j = 0; codon_position_j < this->tables.reduced_codon_table.at(this->decidable_protein.at(aa_pos_i)).size(); ++codon_position_j)
+                            for (size_t codon_position_j = 0; codon_position_j < this->sequence_vars_list.at(t).at(aa_pos_i).size(); ++codon_position_j)
                             {
                                 operations_research::sat::BoolVar y = this->sequence_vars_list.at(t).at(aa_pos_i).at(codon_position_j).at(codon_i);
 
                                 std::string var_name = x.Name() + y.Name();
                                 operations_research::sat::BoolVar z = cp_model.NewBoolVar().WithName(var_name);
-                                
+
                                 if (x.Name().front() == y.Name().front())
                                 {
                                     cp_model.AddEquality(z, y).OnlyEnforceIf(x);
@@ -1105,18 +1008,20 @@ class SIRIUSSolver
     {
         std::vector<operations_research::sat::IntVar> factored_terms;
 
-        for (int i = 0; i < this->all_pairs_z_terms.size(); ++i) {
+        for (int i = 0; i < this->all_pairs_z_terms.size(); ++i)
+        {
             operations_research::sat::IntVar y = this->cp_model.NewIntVar({0, 1}).WithName(this->all_pairs_z_terms.at(i).front().Name());
             this->cp_model.AddEquality(y, this->all_pairs_z_terms.at(i).front());
             factored_terms.push_back(y);
 
-            for (int j = 1; j < this->all_pairs_z_terms.at(i).size(); ++j) {
+            for (int j = 1; j < this->all_pairs_z_terms.at(i).size(); ++j)
+            {
                 operations_research::sat::BoolVar x = this->all_pairs_z_terms.at(i).at(j);
                 operations_research::sat::IntVar z = this->cp_model.NewIntVar({0, j + 1}).WithName(x.Name() + "(1 + " + y.Name() + ")");
-                
+
                 this->cp_model.AddEquality(z, 1 + y).OnlyEnforceIf(x);
                 this->cp_model.AddEquality(z, 0).OnlyEnforceIf(x.Not());
-                
+
                 y = z;
                 factored_terms.push_back(y);
             }
@@ -1133,16 +1038,22 @@ int main(int argc, char *argv[])
     scan_for_quiet_flag(argc, argv);
     print_info_newline(std::string("Fly to ") + BLUE + std::string("SIRIUS") + RESET);
 
-    SIRIUSTables tables; // need to create rscu table if 
-
+    SIRIUSConfig config;
+    SIRIUSTables tables;
     SIRIUSInstance instance;
-    if (argc == 1) {
+
+    if (argc == 1)
+    {
         // instance = gather_inputs_from_yaml("config.yaml", tables);
-        instance = gather_inputs_interactively(tables);
-    } else if (argc == 2 && std::string(argv[1]) == "-i") {
-        instance = gather_inputs_interactively(tables);
-    } else {
-        instance = gather_inputs_from_flags(argc, argv, tables);
+        std::tie(instance, config) = gather_inputs_interactively(tables);
+    }
+    else if (argc == 2 && std::string(argv[1]) == "-i")
+    {
+        std::tie(instance, config) = gather_inputs_interactively(tables);
+    }
+    else
+    {
+        std::tie(instance, config) = gather_inputs_from_flags(argc, argv, tables);
     }
 
     if (instance.hard_filter_by_rscu || instance.soft_filter_by_rscu)
@@ -1150,8 +1061,6 @@ int main(int argc, char *argv[])
         tables.build_rscu_map_from_csv(instance.codon_usage_path);
     }
 
-    SIRIUSConfig config(false, 16, 0, 0);
-    SIRIUSSolver solver(instance, config, tables);
     SIRIUSSolver sirius_solver(instance, config, tables);
 
     std::queue<char> int_vars;
@@ -1181,7 +1090,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    int counter = 0;
     std::string seq;
 
     std::vector<std::string> all_out_seqs;
@@ -1212,23 +1120,27 @@ int main(int argc, char *argv[])
 
     auto [all_stretches, length_counts] = find_all_homologous_stretches_and_count_lengths(all_out_seqs);
 
-    try {
+    try
+    {
         std::ofstream out_lengths(length_counts_filename);
         print_length_counts(length_counts, &out_lengths);
         out_lengths.close();
-    } catch (const std::exception& e) {
+    }
+    catch (const std::exception &e)
+    {
         throw e;
     }
 }
 
 // ===============================================
-void scan_for_quiet_flag(int argc, char *argv[]) {
+void scan_for_quiet_flag(int argc, char *argv[])
+{
     for (int i = 1; i < argc; ++i)
     {
         std::string arg = argv[i];
         std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
 
-        if (arg.find("--quiet=") == 0) 
+        if (arg.find("--quiet=") == 0)
         {
             // quiet is global
             quiet = arg.substr(8) == "true";
@@ -1236,46 +1148,66 @@ void scan_for_quiet_flag(int argc, char *argv[]) {
     }
 }
 
-void print_info(const std::string& message) {
-    if (!quiet) std::cout << BLUE << "> " << RESET << message;
+void print_info(const std::string &message)
+{
+    if (!quiet) {
+        std::cout << BLUE << "> " << RESET << message;
+    }
 }
 
-void print_info_newline(const std::string& message) {
-    if (!quiet) std::cout << BLUE << "> " << RESET << message << "\n";
+void print_info_newline(const std::string &message)
+{
+    if (!quiet) {
+        std::cout << BLUE << "> " << RESET << message << "\n";
+    }
 }
 
-void print_warning(const std::string& message) {
-    if (!quiet) std::cout << ORANGE << "> " << RESET << message;
+void print_warning(const std::string &message)
+{
+    if (!quiet) {
+        std::cout << ORANGE << "> " << RESET << message;
+    }
 }
 
-void print_warning_newline(const std::string& message) {
-    if (!quiet) std::cout << ORANGE << "> " << RESET << message << "\n";
+void print_warning_newline(const std::string &message)
+{
+    if (!quiet) {
+        std::cout << ORANGE << "> " << RESET << message << "\n";
+    }
 }
 
-void print_error(const std::string& message) {
-    if (!quiet) std::cout << RED << "> " << RESET << message;
+void print_error(const std::string &message)
+{
+    if (!quiet) {
+        std::cout << RED << "> " << RESET << message;
+    }
 }
 
-void print_error_newline(const std::string& message) {
-    if (!quiet) std::cout << RED << "> " << RESET << message << "\n";
+void print_error_newline(const std::string &message)
+{
+    if (!quiet) {
+        std::cout << RED << "> " << RESET << message << "\n";
+    }
 }
 
-std::string format_error(const std::string& message) {
+std::string format_error(const std::string &message)
+{
     return RED + std::string("> ") + RESET + message;
 }
 
-[[noreturn]] void throw_formatted_error(const std::string& message) {
-    if (!quiet) {
+[[noreturn]] void throw_formatted_error(const std::string &message)
+{
+    if (!quiet)
+    {
         std::cerr << format_error(message) << "\n";
         std::cout << format_error("Back to Earth.") << "\n";
     }
-    // throw std::runtime_error(message);
     exit(1);
 }
 
 void validate_user_prot_input(
-    const std::string& protein,
-    const std::unordered_map<char, std::vector<std::string>>& reduced_codon_table)
+    const std::string &protein,
+    const std::unordered_map<char, std::vector<std::string>> &reduced_codon_table)
 {
     std::unordered_set<char> invalid_aa;
 
@@ -1294,7 +1226,8 @@ void validate_user_prot_input(
     {
         std::ostringstream oss;
         oss << "Invalid amino acids in protein sequence: ";
-        for (char aa : invalid_aa) {
+        for (char aa : invalid_aa)
+        {
             oss << "'" << aa << "' ";
         }
         throw_formatted_error(oss.str());
@@ -1310,7 +1243,7 @@ void validate_user_num_seq_input(int num_sequences)
     }
 }
 
-void validate_file_exists(const std::string& filename, const std::string& message)
+void validate_file_exists(const std::string &filename, const std::string &message)
 {
     if (!std::filesystem::exists(filename))
     {
@@ -1318,9 +1251,9 @@ void validate_file_exists(const std::string& filename, const std::string& messag
     }
 }
 
-void print_inputs(const std::string& protein, int num_sequences)
+void print_inputs(const std::string &protein, int num_sequences)
 {
-    if (protein.size() > 43)  // 20 start + 3 dots + 20 end = 43 total
+    if (protein.size() > 43) // 20 start + 3 dots + 20 end = 43 total
     {
         std::string to_print;
         to_print += protein.substr(0, 20);
@@ -1352,16 +1285,26 @@ void print_inputs(const std::string& protein, int num_sequences)
 //     return SIRIUSInstance(n, prot, tables, codon_usage_path, rscu_thresh, alpha, max_ratio, hard, soft);
 // }
 
-SIRIUSInstance gather_inputs_from_flags(int argc, char* argv[], const SIRIUSTables& tables)
+std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char *argv[], const SIRIUSTables &tables)
 {
+    std::string just_input;
+
     int num_sequences = 2;
     std::string init_target_protein = "MALEEINENSTERN";
-    std::string codon_usage_path;
-    bool hard_rscu_filter = false, soft_rscu_filter = false;
-    double rscu_threshold = 0.5, rscu_alpha = 4.0, max_low_rscu_ratio = 0.3;
+    std::string codon_usage_path = "";
 
-    if (argc == 3) 
-    {        
+    double relative_gap_limit = 0.0;
+    int num_workers = 16;
+    bool show_ortools_log = false;
+
+    bool user_set_rscu_threshold = false;
+    bool user_set_rscu_ratio = false;
+
+    bool hard_rscu_filter = false, soft_rscu_filter = false;
+    double rscu_threshold = 0.5, rscu_alpha = 10.0, max_low_rscu_ratio = 0.3;
+
+    if (argc == 3)
+    {
         std::string first_arg = argv[1];
         std::string second_arg = argv[2];
 
@@ -1369,24 +1312,30 @@ SIRIUSInstance gather_inputs_from_flags(int argc, char* argv[], const SIRIUSTabl
         {
             init_target_protein = first_arg.substr(7);
         }
-        else 
+        else
         {
             init_target_protein = first_arg;
         }
 
         if (second_arg.find("--n=") == 0)
         {
-            try {
+            try
+            {
                 num_sequences = std::stoi(second_arg.substr(4));
-            } catch (...) {
+            }
+            catch (...)
+            {
                 throw_formatted_error("Error: Number of sequences must be a positive integer.");
             }
         }
         else
         {
-            try {
+            try
+            {
                 num_sequences = std::stoi(second_arg);
-            } catch (...) {
+            }
+            catch (...)
+            {
                 throw_formatted_error("Error: Number of sequences must be a positive integer.");
             }
         }
@@ -1396,14 +1345,14 @@ SIRIUSInstance gather_inputs_from_flags(int argc, char* argv[], const SIRIUSTabl
 
         print_inputs(init_target_protein, num_sequences);
 
-        return SIRIUSInstance(num_sequences, init_target_protein, tables, "", 0, 0, 0, false, false);
+        SIRIUSConfig config(show_ortools_log, num_workers, 0, relative_gap_limit);
+        SIRIUSInstance instance(num_sequences, init_target_protein, tables, "", 0, 0, 0, false, false);
+        return {instance, config};
     }
 
     for (int i = 1; i < argc; ++i)
     {
         std::string arg = argv[i];
-        // std::string arg = original_arg;
-        // std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
 
         if (arg.find("--prot=") == 0)
         {
@@ -1411,57 +1360,114 @@ SIRIUSInstance gather_inputs_from_flags(int argc, char* argv[], const SIRIUSTabl
         }
         else if (arg.find("--n=") == 0)
         {
-            try {
+            try
+            {
                 num_sequences = std::stoi(arg.substr(4));
-            } catch (...) {
+            }
+            catch (...)
+            {
                 throw_formatted_error("Error: Number of sequences must be a positive integer.");
             }
         }
-        else if (arg.find("--quiet=") == 0) 
+        else if (arg.find("--relative_gap_limit=") == 0)
         {
-            // quiet is global
-            quiet = arg.substr(8) == "true";
+            try
+            {
+                relative_gap_limit = std::stod(arg.substr(21));
+            }
+            catch (...)
+            {
+                throw_formatted_error("Error: Relative gap limit must be a positive number.");
+            }
+        }
+        else if (arg.find("--num_workers=") == 0)
+        {
+            try
+            {
+                num_workers = std::stoi(arg.substr(14));
+            }
+            catch (...)
+            {
+                throw_formatted_error("Error: Number of CPU workers must be a positive integer.");
+            }
+        }
+        else if (arg.find("--show_ortools_log=") == 0)
+        {
+            show_ortools_log = arg.substr(19) == "true";
         }
         else if (arg.find("--hard_rscu=") == 0)
         {
-            hard_rscu_filter = arg.substr(12) == "true";
+            just_input = arg.substr(12);
+            if (just_input == "true")
+            {
+                hard_rscu_filter = true;
+            }
+            else
+            {
+                // it's late and i felt lonely the whole day.
+                // this sarcasm is keeping my soul intact in the code.
+                print_info_newline("Hä?! Bold of you to assume \"" + just_input + "\" for hard RSCU filter is valid. Taking that as a false.");
+                hard_rscu_filter = false;
+            }
         }
         else if (arg.find("--soft_rscu=") == 0)
         {
-            soft_rscu_filter = arg.substr(12) == "true";
+            just_input = arg.substr(12);
+            if (just_input == "true")
+            {
+                soft_rscu_filter = true;
+            }
+            else
+            {
+                print_info_newline("Hä?! Bold of you to assume \"" + just_input + "\" for soft RSCU filter is valid. Taking that as a false.");
+                soft_rscu_filter = false;
+            }
         }
         else if (arg.find("--rscu_thresh=") == 0)
         {
-            try {
+            try
+            {
                 rscu_threshold = std::stod(arg.substr(14));
-            } catch (...) {
+                user_set_rscu_threshold = true;
+            }
+            catch (...)
+            {
                 throw_formatted_error("Error: RSCU threshold must be a positive number.");
             }
         }
         else if (arg.find("--rscu_alpha=") == 0)
         {
-            try {
+            try
+            {
                 rscu_alpha = std::stod(arg.substr(13));
-            } catch (...) {
+            }
+            catch (...)
+            {
                 throw_formatted_error("Error: RSCU's alpha must be a number.");
             }
         }
-        else if (arg.find("--max_low_rscu_ratio=") == 0) 
+        else if (arg.find("--max_low_rscu_ratio=") == 0)
         {
-            try {
-                max_low_rscu_ratio = std::stod(arg.substr(23));
+            try
+            {
+                max_low_rscu_ratio = std::stod(arg.substr(21));
                 if (max_low_rscu_ratio < 0 || max_low_rscu_ratio > 1)
-                    throw std::invalid_argument("out of bounds");
-            } catch (...) {
+                {
+                    throw_formatted_error("Error: Max RSCU ratio must be a number between 0-1.");
+                }
+                user_set_rscu_ratio = true;
+            }
+            catch (...)
+            {
                 throw_formatted_error("Error: Max RSCU ratio must be a number between 0-1.");
             }
         }
         else if (arg.find("--codon_usage_fpath=") == 0)
         {
-            codon_usage_path = arg.substr(19);
+            codon_usage_path = arg.substr(20);
             validate_file_exists(codon_usage_path, "codon usage file");
         }
-        else 
+        else
         {
             throw_formatted_error("Error: Unrecognized flag: " + arg);
         }
@@ -1475,9 +1481,32 @@ SIRIUSInstance gather_inputs_from_flags(int argc, char* argv[], const SIRIUSTabl
         throw_formatted_error("Error: Cannot both soft- and hard-filter RSCU. Set only one to true.");
     }
 
+    if ((hard_rscu_filter || soft_rscu_filter) && codon_usage_path == "")
+    {
+        throw_formatted_error("Error: You must provide a valid path for the --codon_usage_fpath flag when using RSCU filtering.");
+    }
+
+    if ((hard_rscu_filter || soft_rscu_filter) && !user_set_rscu_threshold)
+    {
+        std::ostringstream oss;
+        oss << "Warning: You did not specify an RSCU threshold. Using default ("
+            << std::fixed << std::setprecision(1) << rscu_threshold << ").";
+
+        print_warning_newline(oss.str());
+    }
+
+    if (soft_rscu_filter && !user_set_rscu_ratio)
+    {
+        std::ostringstream oss;
+        oss << "Warning: You did not specify an RSCU ratio. Using default ("
+            << std::fixed << std::setprecision(1) << max_low_rscu_ratio << ").";
+
+        print_warning_newline(oss.str());
+    }
+
     print_inputs(init_target_protein, num_sequences);
 
-    return SIRIUSInstance(
+    SIRIUSInstance instance(
         num_sequences,
         init_target_protein,
         tables,
@@ -1486,17 +1515,21 @@ SIRIUSInstance gather_inputs_from_flags(int argc, char* argv[], const SIRIUSTabl
         rscu_alpha,
         max_low_rscu_ratio,
         hard_rscu_filter,
-        soft_rscu_filter
-    );
+        soft_rscu_filter);
+
+    SIRIUSConfig config(show_ortools_log, num_workers, 0, relative_gap_limit);
+
+    return {instance, config};
 }
 
-SIRIUSInstance gather_inputs_interactively(SIRIUSTables& tables)
+std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_interactively(SIRIUSTables &tables)
 {
-    quiet = false;
-
     int num_sequences;
     std::string init_target_protein;
     std::string codon_usage_path;
+    double relative_gap_limit = 0.0;
+    int num_workers = 16;
+    bool show_ortools_log = false;
     double rscu_threshold = 0.0, rscu_alpha = 4.0, max_low_rscu_ratio = 0.0;
     bool hard_rscu_filter = false;
     bool soft_rscu_filter = false;
@@ -1509,9 +1542,12 @@ SIRIUSInstance gather_inputs_interactively(SIRIUSTables& tables)
 
     print_info("And the number of sequences: ");
     std::cin >> input;
-    try {
+    try
+    {
         num_sequences = std::stoi(input);
-    } catch (const std::invalid_argument& e) {
+    }
+    catch (const std::invalid_argument &e)
+    {
         throw_formatted_error("Error: Number of sequences must be an integer.");
     }
 
@@ -1531,24 +1567,30 @@ SIRIUSInstance gather_inputs_interactively(SIRIUSTables& tables)
         soft_rscu_filter = (input == "1");
         // ----
 
-        if (soft_rscu_filter) 
+        if (soft_rscu_filter)
         {
             // ---- SOFT RSCU ALPHA ----
             print_info("Soft RSCU alpha (e.g. 4.0): ");
             std::cin >> input;
-            try {
+            try
+            {
                 rscu_alpha = std::stod(input);
-            } catch (const std::invalid_argument& e) {
+            }
+            catch (const std::invalid_argument &e)
+            {
                 throw_formatted_error("Error: Alpha must be a number.");
             }
             // ----
-            
+
             // --- MAX LOW-RSCU RATIO ----
             print_info("Max low-RSCU ratio (0.0 - 1.0): ");
             std::cin >> input;
-            try {
+            try
+            {
                 max_low_rscu_ratio = std::stod(input);
-            } catch (const std::invalid_argument& e) {
+            }
+            catch (const std::invalid_argument &e)
+            {
                 throw_formatted_error("Error: Max low-RSCU ratio must be a number.");
             }
         }
@@ -1570,9 +1612,12 @@ SIRIUSInstance gather_inputs_interactively(SIRIUSTables& tables)
         // ---- RSCU THRESHOLD ----
         print_info("RSCU threshold (e.g. 0.7): ");
         std::cin >> input;
-        try {
+        try
+        {
             rscu_threshold = std::stod(input);
-        } catch (const std::invalid_argument& e) {
+        }
+        catch (const std::invalid_argument &e)
+        {
             throw_formatted_error("Error: RSCU threshold must be a positive number.");
         }
         // ----
@@ -1581,7 +1626,7 @@ SIRIUSInstance gather_inputs_interactively(SIRIUSTables& tables)
     // Show summary before returning
     print_inputs(init_target_protein, num_sequences);
 
-    return SIRIUSInstance(
+    SIRIUSInstance instance(
         num_sequences,
         init_target_protein,
         tables,
@@ -1590,8 +1635,11 @@ SIRIUSInstance gather_inputs_interactively(SIRIUSTables& tables)
         rscu_alpha,
         max_low_rscu_ratio,
         hard_rscu_filter,
-        soft_rscu_filter
-    );
+        soft_rscu_filter);
+
+    SIRIUSConfig config(show_ortools_log, num_workers, 0, relative_gap_limit);
+
+    return {instance, config};
 }
 
 std::string elapsed_since_start()
@@ -1612,18 +1660,21 @@ std::string elapsed_since_start()
     return oss.str();
 }
 
-std::string create_output_folder(const std::string& base) {
+std::string create_output_folder(const std::string &base)
+{
     namespace fs = std::filesystem;
     std::string folder = base;
     int index = 1;
-    while (fs::exists(folder)) {
+    while (fs::exists(folder))
+    {
         folder = base + "_" + std::to_string(index++);
     }
     fs::create_directory(folder);
     return folder;
 }
 
-std::string timestamped_filename(const std::string& prefix) {
+std::string timestamped_filename(const std::string &prefix)
+{
     auto now = std::chrono::system_clock::now();
     std::time_t now_c = std::chrono::system_clock::to_time_t(now);
     std::stringstream ss;
@@ -1632,15 +1683,20 @@ std::string timestamped_filename(const std::string& prefix) {
     return ss.str();
 }
 
-std::string generate_unique_filename(const std::string& base_name) {
+std::string generate_unique_filename(const std::string &base_name)
+{
     std::string name = base_name;
     int counter = 2;
 
-    while (std::filesystem::exists(name)) {
+    while (std::filesystem::exists(name))
+    {
         size_t dot_pos = base_name.find('.');
-        if (dot_pos == std::string::npos) {
+        if (dot_pos == std::string::npos)
+        {
             name = base_name + "_" + std::to_string(counter);
-        } else {
+        }
+        else
+        {
             name = base_name.substr(0, dot_pos) + "_" + std::to_string(counter) + base_name.substr(dot_pos);
         }
         ++counter;
@@ -1649,11 +1705,13 @@ std::string generate_unique_filename(const std::string& base_name) {
     return name;
 }
 
-void write_sequences_to_file_and_console(const std::vector<std::string>& sequences, const std::string& base_filename) {
+void write_sequences_to_file_and_console(const std::vector<std::string> &sequences, const std::string &base_filename)
+{
     std::string filename = generate_unique_filename(base_filename);
     std::ofstream out_file(filename);
-    
-    if (!out_file) {
+
+    if (!out_file)
+    {
         std::cout << RED << "> " << RESET << "[" << elapsed_since_start() << "] Error: Failed to open output file.\n";
         return;
     }
@@ -1665,12 +1723,13 @@ void write_sequences_to_file_and_console(const std::vector<std::string>& sequenc
         std::cout << BLUE << "> " << RESET << "Resulting sequences too long to display here.\n";
     }
 
-    for (const auto& seq : sequences) {
-        if (!too_large) 
+    for (const auto &seq : sequences)
+    {
+        if (!too_large)
         {
             std::cout << BLUE << "> " << RESET << seq << std::endl;
         }
-        
+
         out_file << seq << "\n";
     }
 
@@ -1679,14 +1738,17 @@ void write_sequences_to_file_and_console(const std::vector<std::string>& sequenc
 }
 
 // Function to validate protein translation of sequences
-void validate_translated_proteins(const std::vector<std::string>& sequences,
-                                  const std::string& target_protein,
-                                  const SIRIUSTables& tables) {
-    for (size_t i = 0; i < sequences.size(); ++i) {
+void validate_translated_proteins(const std::vector<std::string> &sequences,
+                                  const std::string &target_protein,
+                                  const SIRIUSTables &tables)
+{
+    for (size_t i = 0; i < sequences.size(); ++i)
+    {
         std::string protein = translate_dna_to_protein(sequences[i], tables);
 
         // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Protein " << i + 1 << ": " << protein << "\n";
-        if (protein != target_protein) {
+        if (protein != target_protein)
+        {
             std::cout << RED << "> " << RESET << "Dev error: SEQ " << i << " " << sequences[i] << " NOT THE SAME\n";
         }
     }
@@ -1803,23 +1865,27 @@ find_all_homologous_stretches_and_count_lengths(const std::vector<std::string> &
     return {all_stretches, length_counts};
 }
 
-void print_length_counts(const std::unordered_map<int, int>& length_counts, std::ostream* file_out)
+void print_length_counts(const std::unordered_map<int, int> &length_counts, std::ostream *file_out)
 {
-    if (length_counts.empty()) {
-        return;  // Do not print anything if there are no counts
+    if (length_counts.empty())
+    {
+        return; // Do not print anything if there are no counts
     }
 
     std::vector<std::pair<int, int>> sorted_counts(length_counts.begin(), length_counts.end());
 
     std::sort(sorted_counts.begin(), sorted_counts.end(),
-              [](const auto& a, const auto& b) {
+              [](const auto &a, const auto &b)
+              {
                   return a.first > b.first;
               });
 
     std::cout << BLUE << "> " << RESET << "Fragment length counts:\n";
-    for (const auto& [length, count] : sorted_counts) {
+    for (const auto &[length, count] : sorted_counts)
+    {
         std::cout << BLUE << "> " << RESET << "Length " << length << ": " << count << " occurrences\n";
-        if (file_out) {
+        if (file_out)
+        {
             *file_out << "Length " << length << ": " << count << " occurrences\n";
         }
     }
