@@ -1344,8 +1344,8 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char 
 
     std::string codon_usage_path = "";
 
-    double rscu_alpha = 10.0, max_low_rscu_ratio = 0.3;
-    double hard_rscu_threshold = 0.5, soft_rscu_threshold = 0.5, gc_end_rscu_threshold = 0.0;
+    double rscu_alpha = 0, max_low_rscu_ratio = 0.0;
+    double hard_rscu_threshold = 0.0, soft_rscu_threshold = 0.0, gc_end_rscu_threshold = 0.0;
 
     if (argc == 3)
     {
