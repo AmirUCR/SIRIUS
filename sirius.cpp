@@ -109,108 +109,6 @@ void print_length_counts(const std::unordered_map<int, int> &length_counts, std:
 void check_response(const operations_research::sat::CpSolverResponse &response);
 // ---------------------
 
-int main(int argc, char *argv[])
-{
-    // Systematische Identifikation Redundanter, Identisch Uebersetzter Sequenzen
-    ::google::InitGoogleLogging("SIRIUS");
-    scan_for_quiet_flag(argc, argv);
-    print_info_newline(std::string("Fly to ") + BLUE + std::string("SIRIUS") + RESET);
-
-    SIRIUSConfig config;
-    SIRIUSTables tables;
-    SIRIUSInstance instance;
-
-    if (argc == 1)
-    {
-        // instance = gather_inputs_from_yaml("config.yaml", tables);
-        std::tie(instance, config) = gather_inputs_interactively(tables); // todo
-    }
-    else if (argc == 2 && std::string(argv[1]) == "-i")
-    {
-        std::tie(instance, config) = gather_inputs_interactively(tables);
-    }
-    else
-    {
-        std::tie(instance, config) = gather_inputs_from_flags(argc, argv, tables);
-    }
-
-    if (instance.hard_filter_by_rscu || instance.soft_filter_by_rscu)
-    {
-        tables.build_rscu_map_from_csv(instance.codon_usage_path);
-    }
-
-    SIRIUSSolver sirius_solver(instance, config, tables);
-
-    std::queue<char> int_vars;
-
-    // -----
-    // GO!
-    sirius_solver.init_new_model();
-    sirius_solver.build_model();
-    sirius_solver.set_minimize_objective_value();
-    sirius_solver.solve_model();
-    // -----
-
-    // Variables for each base
-    // Flatten sequence_vars_list
-    std::vector<operations_research::sat::BoolVar> base_vars;
-    for (const auto &a : sirius_solver.sequence_vars_list)
-        for (const auto &b : a)
-            for (const auto &c : b)
-                for (const auto &var : c)
-                    base_vars.push_back(var);
-
-    for (const auto &var : base_vars)
-    {
-        if (operations_research::sat::SolutionIntegerValue(sirius_solver.response, var))
-        {
-            int_vars.push(var.Name().front());
-        }
-    }
-
-    std::string seq;
-
-    std::vector<std::string> all_out_seqs;
-    for (int seq_n = 0; seq_n < instance.n; ++seq_n)
-    {
-        std::string this_seq = "";
-        for (int i = 0; i < sirius_solver.dna_size; ++i)
-        {
-            if (sirius_solver.dna_with_holes[i] == '_')
-            {
-                this_seq += int_vars.front();
-                int_vars.pop();
-            }
-            else
-            {
-                this_seq += sirius_solver.dna_with_holes[i];
-            }
-        }
-        all_out_seqs.push_back(this_seq);
-    }
-
-    std::string output_folder = create_output_folder();
-    std::string sequences_filename = output_folder + "/" + timestamped_filename("sequences");
-    std::string length_counts_filename = output_folder + "/" + timestamped_filename("length_counts");
-
-    write_sequences_to_file_and_console(all_out_seqs, sequences_filename);
-    validate_translated_proteins(all_out_seqs, instance.init_target_protein, tables);
-
-    auto [all_stretches, length_counts] = find_all_homologous_stretches_and_count_lengths(all_out_seqs);
-
-    try
-    {
-        std::ofstream out_lengths(length_counts_filename);
-        print_length_counts(length_counts, &out_lengths);
-        out_lengths.close();
-    }
-    catch (const std::exception &e)
-    {
-        throw e;
-    }
-}
-
-// ===============================================
 class SIRIUSTables
 {
 public:
@@ -1167,6 +1065,108 @@ public:
     }
 };
 
+int main(int argc, char *argv[])
+{
+    // Systematische Identifikation Redundanter, Identisch Uebersetzter Sequenzen
+    ::google::InitGoogleLogging("SIRIUS");
+    scan_for_quiet_flag(argc, argv);
+    print_info_newline(std::string("Fly to ") + BLUE + std::string("SIRIUS") + RESET);
+
+    SIRIUSConfig config;
+    SIRIUSTables tables;
+    SIRIUSInstance instance;
+
+    if (argc == 1)
+    {
+        // instance = gather_inputs_from_yaml("config.yaml", tables);
+        std::tie(instance, config) = gather_inputs_interactively(tables); // todo
+    }
+    else if (argc == 2 && std::string(argv[1]) == "-i")
+    {
+        std::tie(instance, config) = gather_inputs_interactively(tables);
+    }
+    else
+    {
+        std::tie(instance, config) = gather_inputs_from_flags(argc, argv, tables);
+    }
+
+    if (instance.hard_filter_by_rscu || instance.soft_filter_by_rscu)
+    {
+        tables.build_rscu_map_from_csv(instance.codon_usage_path);
+    }
+
+    SIRIUSSolver sirius_solver(instance, config, tables);
+
+    std::queue<char> int_vars;
+
+    // -----
+    // GO!
+    sirius_solver.init_new_model();
+    sirius_solver.build_model();
+    sirius_solver.set_minimize_objective_value();
+    sirius_solver.solve_model();
+    // -----
+
+    // Variables for each base
+    // Flatten sequence_vars_list
+    std::vector<operations_research::sat::BoolVar> base_vars;
+    for (const auto &a : sirius_solver.sequence_vars_list)
+        for (const auto &b : a)
+            for (const auto &c : b)
+                for (const auto &var : c)
+                    base_vars.push_back(var);
+
+    for (const auto &var : base_vars)
+    {
+        if (operations_research::sat::SolutionIntegerValue(sirius_solver.response, var))
+        {
+            int_vars.push(var.Name().front());
+        }
+    }
+
+    std::string seq;
+
+    std::vector<std::string> all_out_seqs;
+    for (int seq_n = 0; seq_n < instance.n; ++seq_n)
+    {
+        std::string this_seq = "";
+        for (int i = 0; i < sirius_solver.dna_size; ++i)
+        {
+            if (sirius_solver.dna_with_holes[i] == '_')
+            {
+                this_seq += int_vars.front();
+                int_vars.pop();
+            }
+            else
+            {
+                this_seq += sirius_solver.dna_with_holes[i];
+            }
+        }
+        all_out_seqs.push_back(this_seq);
+    }
+
+    std::string output_folder = create_output_folder();
+    std::string sequences_filename = output_folder + "/" + timestamped_filename("sequences");
+    std::string length_counts_filename = output_folder + "/" + timestamped_filename("length_counts");
+
+    write_sequences_to_file_and_console(all_out_seqs, sequences_filename);
+    validate_translated_proteins(all_out_seqs, instance.init_target_protein, tables);
+
+    auto [all_stretches, length_counts] = find_all_homologous_stretches_and_count_lengths(all_out_seqs);
+
+    try
+    {
+        std::ofstream out_lengths(length_counts_filename);
+        print_length_counts(length_counts, &out_lengths);
+        out_lengths.close();
+    }
+    catch (const std::exception &e)
+    {
+        throw e;
+    }
+}
+
+// ===============================================
 void scan_for_quiet_flag(int argc, char *argv[])
 {
     for (int i = 1; i < argc; ++i)
