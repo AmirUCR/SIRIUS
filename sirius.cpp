@@ -464,6 +464,7 @@ public:
     operations_research::sat::LinearExpr objective;
     VectorSequenceAminoacidCodonBoolVariables sequence_vars_list;
     std::vector<operations_research::sat::IntVar> additive_obj_mults;
+    std::vector<bool> aa_position_has_been_messed_with;
     std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>> sequence_codons_list;
 
     SIRIUSSolver(SIRIUSInstance instance, SIRIUSConfig config, SIRIUSTables tables)
@@ -483,6 +484,8 @@ public:
         this->dna_with_holes = this->instance.dna_with_holes;
         this->decidable_protein = this->instance.decidable_protein;
         this->decidable_protein_length = this->instance.decidable_protein_length;
+
+        aa_position_has_been_messed_with = std::vector<bool>(this->decidable_protein_length, false);
     }
 
     void init_new_model()
@@ -504,10 +507,7 @@ public:
         this->sequence_codons_list = add_codon_constraints();
 
         // print_info_newline("[" + elapsed_since_start() + "] Creating symmetry breaking constraints...");
-        if (!this->instance.soft_filter_by_rscu)
-        {
-            add_codon_mult_relaxed_anti_symmetry_constraints();
-        }
+        add_codon_mult_relaxed_anti_symmetry_constraints();
 
         // print_info_newline("[" + elapsed_since_start() + "] Creating Y chained vars...");
         this->all_pairs_y_terms = create_y_chained_vars();
@@ -600,6 +600,7 @@ public:
                         // Enforce max use cap
                         if (num_issued_codons.at(aa).at(codon) >= max_allowed_per_codon.at(aa).at(codon))
                         {
+                            this->aa_position_has_been_messed_with.at(p) = true;
                             continue;
                         }
 
@@ -609,6 +610,7 @@ public:
                         // Jetzt hast du Pech gehabt.
                         if (this->dis(this->gen) > probability)
                         {
+                            this->aa_position_has_been_messed_with.at(p) = true;
                             continue;
                         }
 
@@ -884,6 +886,11 @@ public:
 
             for (int pos = 0; pos < seq_length; ++pos)
             {
+                if (this->aa_position_has_been_messed_with.at(pos))
+                {
+                    continue;
+                }
+
                 // Determine if seq[k] and seq[k+1] codons at this position are equal
                 prefix_equal[pos] = this->cp_model.NewBoolVar();
                 int num_codons = this->sequence_codons_list[k][pos].size();
@@ -1620,7 +1627,7 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_interactively(SIRIUSTables
         use_hard_rscu = false;
         hard_rscu_threshold = 0;
     }
-    else if (input == "yes")
+    else if (input == "yes" || input == "y")
     {
         use_hard_rscu = true;
     }
@@ -1641,7 +1648,7 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_interactively(SIRIUSTables
             use_soft_rscu = false;
             soft_rscu_threshold = 0;
         }
-        else if (input == "yes")
+        else if (input == "yes" || input == "y")
         {
             use_soft_rscu = true;
         }
