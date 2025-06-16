@@ -139,7 +139,7 @@ public:
     };
 
     std::set<char> skip_aa = {'M', 'W'};
-    
+
     std::unordered_map<char, std::vector<std::string>> reduced_codon_table = {
         {'A', {"A", "C", "G", "T"}},                       // {"GCT", "GCC", "GCA", "GCG"}
         {'C', {"C", "T"}},                                 // {"TGT", "TGC"}
@@ -346,11 +346,14 @@ class SIRIUSInstance
 public:
     int n;
     int decidable_protein_length;
-    double rscu_threshold;
+    double hard_rscu_threshold;
+    double soft_rscu_threshold;
+    double gc_ending_rscu_threshold;
     double rscu_alpha;
     double max_low_rscu_ratio;
-    bool hard_filter_by_rscu;
-    bool soft_filter_by_rscu;
+    bool hard_filter_by_rscu = false;
+    bool soft_filter_by_rscu = false;
+    ;
 
     std::string codon_usage_path;
 
@@ -366,25 +369,34 @@ public:
         std::string init_target_protein,
         SIRIUSTables tables,
         std::string codon_usage_path,
-        double rscu_threshold,
+        double hard_rscu_threshold,
+        double soft_rscu_threshold,
+        double gc_ending_rscu_threshold,
         double rscu_alpha,
-        double max_low_rscu_ratio,
-        bool hard_filter_by_rscu,
-        bool soft_filter_by_rscu)
+        double max_low_rscu_ratio)
         : n(n),
           init_target_protein(std::move(init_target_protein)),
           tables(std::move(tables)),
           codon_usage_path(std::move(codon_usage_path)),
-          rscu_threshold(rscu_threshold),
+          hard_rscu_threshold(hard_rscu_threshold),
+          soft_rscu_threshold(soft_rscu_threshold),
+          gc_ending_rscu_threshold(gc_ending_rscu_threshold),
           rscu_alpha(rscu_alpha),
-          max_low_rscu_ratio(max_low_rscu_ratio),
-          hard_filter_by_rscu(hard_filter_by_rscu),
-          soft_filter_by_rscu(soft_filter_by_rscu)
+          max_low_rscu_ratio(max_low_rscu_ratio)
     {
         std::transform(
             this->init_target_protein.begin(),
             this->init_target_protein.end(),
             this->init_target_protein.begin(), ::toupper);
+
+        if (this->hard_rscu_threshold > 0)
+        {
+            this->hard_filter_by_rscu = true;
+        }
+        if (this->soft_rscu_threshold > 0)
+        {
+            this->soft_filter_by_rscu = true;
+        }
 
         this->dna_with_holes = "";
         this->decidable_protein = "";
@@ -541,7 +553,7 @@ public:
                 num_issued_codons[aa][codon] = 0;
 
                 // Marked for Russian roulette!
-                if (rscu < this->instance.rscu_threshold)
+                if (rscu < this->instance.soft_rscu_threshold)
                 {
                     // Allow low-RSCU codon at most X% of times it's possible for this amino acid
                     // e.g., 30% of the total positions where this AA occurs
@@ -583,7 +595,7 @@ public:
                     }
 
                     // Russian roulette time!
-                    if (rscu < this->instance.rscu_threshold)
+                    if (rscu < this->instance.soft_rscu_threshold)
                     {
                         // Enforce max use cap
                         if (num_issued_codons.at(aa).at(codon) >= max_allowed_per_codon.at(aa).at(codon))
@@ -591,7 +603,7 @@ public:
                             continue;
                         }
 
-                        double normalized = std::max(0.0, std::min(1.0, rscu / this->instance.rscu_threshold));
+                        double normalized = std::max(0.0, std::min(1.0, rscu / this->instance.soft_rscu_threshold));
                         double probability = std::exp(-this->instance.rscu_alpha * (1.0 - normalized));
 
                         // Jetzt hast du Pech gehabt.
@@ -630,7 +642,7 @@ public:
 
     std::vector<std::vector<std::string>> generate_sequence_codons_with_hard_rscu()
     {
-        std::vector<std::vector<std::string>> sequence_codons;
+        std::vector<std::vector<std::string>> sequence_codons(this->decidable_protein_length);
 
         for (int i = 0; i < this->decidable_protein.size(); ++i)
         {
@@ -644,6 +656,22 @@ public:
 
             for (const std::string &codon : this->tables.reduced_codon_table.at(aa))
             {
+                std::string full_codon = "";
+
+                int reduced_codon_idx = 0;
+                for (const char &c : this->tables.invariant_codon_table.at(aa))
+                {
+                    if (c != '_')
+                    {
+                        full_codon += c;
+                    }
+                    else
+                    {
+                        full_codon += codon.at(reduced_codon_idx);
+                        ++reduced_codon_idx;
+                    }
+                }
+
                 double rscu = this->tables.rscu_map.at(aa).at(codon);
 
                 if (rscu > largest_rscu)
@@ -653,7 +681,13 @@ public:
                 }
 
                 // Axed.
-                if (rscu < this->instance.rscu_threshold)
+                if (rscu < this->instance.hard_rscu_threshold)
+                {
+                    continue;
+                }
+
+                if (rscu < this->instance.gc_ending_rscu_threshold &&
+                    (full_codon.back() != 'G' && full_codon.back() != 'C'))
                 {
                     continue;
                 }
@@ -1045,7 +1079,7 @@ int main(int argc, char *argv[])
     if (argc == 1)
     {
         // instance = gather_inputs_from_yaml("config.yaml", tables);
-        std::tie(instance, config) = gather_inputs_interactively(tables);
+        std::tie(instance, config) = gather_inputs_interactively(tables); // todo
     }
     else if (argc == 2 && std::string(argv[1]) == "-i")
     {
@@ -1150,42 +1184,48 @@ void scan_for_quiet_flag(int argc, char *argv[])
 
 void print_info(const std::string &message)
 {
-    if (!quiet) {
+    if (!quiet)
+    {
         std::cout << BLUE << "> " << RESET << message;
     }
 }
 
 void print_info_newline(const std::string &message)
 {
-    if (!quiet) {
+    if (!quiet)
+    {
         std::cout << BLUE << "> " << RESET << message << "\n";
     }
 }
 
 void print_warning(const std::string &message)
 {
-    if (!quiet) {
+    if (!quiet)
+    {
         std::cout << ORANGE << "> " << RESET << message;
     }
 }
 
 void print_warning_newline(const std::string &message)
 {
-    if (!quiet) {
+    if (!quiet)
+    {
         std::cout << ORANGE << "> " << RESET << message << "\n";
     }
 }
 
 void print_error(const std::string &message)
 {
-    if (!quiet) {
+    if (!quiet)
+    {
         std::cout << RED << "> " << RESET << message;
     }
 }
 
 void print_error_newline(const std::string &message)
 {
-    if (!quiet) {
+    if (!quiet)
+    {
         std::cout << RED << "> " << RESET << message << "\n";
     }
 }
@@ -1253,7 +1293,8 @@ void validate_file_exists(const std::string &filename, const std::string &messag
 
 void print_inputs(const std::string &protein, int num_sequences)
 {
-    if (protein.size() > 43) // 20 start + 3 dots + 20 end = 43 total
+    // 20 start + 3 dots + 20 end = 43 total
+    if (protein.size() > 43)
     {
         std::string to_print;
         to_print += protein.substr(0, 20);
@@ -1291,17 +1332,20 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char 
 
     int num_sequences = 2;
     std::string init_target_protein = "MALEEINENSTERN";
-    std::string codon_usage_path = "";
 
-    double relative_gap_limit = 0.0;
     int num_workers = 16;
     bool show_ortools_log = false;
+    double relative_gap_limit = 0.0;
 
-    bool user_set_rscu_threshold = false;
+    bool user_set_alpha = false;
     bool user_set_rscu_ratio = false;
+    bool user_set_gc_end_rscu_threshold = false;
+    bool user_set_hard_rscu_threshold = false, user_set_soft_rscu_threshold = false;
 
-    bool hard_rscu_filter = false, soft_rscu_filter = false;
-    double rscu_threshold = 0.5, rscu_alpha = 10.0, max_low_rscu_ratio = 0.3;
+    std::string codon_usage_path = "";
+
+    double rscu_alpha = 10.0, max_low_rscu_ratio = 0.3;
+    double hard_rscu_threshold = 0.5, soft_rscu_threshold = 0.5, gc_end_rscu_threshold = 0.0;
 
     if (argc == 3)
     {
@@ -1395,40 +1439,36 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char 
         {
             show_ortools_log = arg.substr(19) == "true";
         }
-        else if (arg.find("--hard_rscu=") == 0)
-        {
-            just_input = arg.substr(12);
-            if (just_input == "true")
-            {
-                hard_rscu_filter = true;
-            }
-            else
-            {
-                // it's late and i felt lonely the whole day.
-                // this sarcasm is keeping my soul intact in the code.
-                print_info_newline("Hä?! Bold of you to assume \"" + just_input + "\" for hard RSCU filter is valid. Taking that as a false.");
-                hard_rscu_filter = false;
-            }
-        }
-        else if (arg.find("--soft_rscu=") == 0)
-        {
-            just_input = arg.substr(12);
-            if (just_input == "true")
-            {
-                soft_rscu_filter = true;
-            }
-            else
-            {
-                print_info_newline("Hä?! Bold of you to assume \"" + just_input + "\" for soft RSCU filter is valid. Taking that as a false.");
-                soft_rscu_filter = false;
-            }
-        }
-        else if (arg.find("--rscu_thresh=") == 0)
+        else if (arg.find("--soft_rscu_thresh=") == 0)
         {
             try
             {
-                rscu_threshold = std::stod(arg.substr(14));
-                user_set_rscu_threshold = true;
+                soft_rscu_threshold = std::stod(arg.substr(19));
+                user_set_soft_rscu_threshold = true;
+            }
+            catch (...)
+            {
+                throw_formatted_error("Error: Soft RSCU threshold must be a positive number.");
+            }
+        }
+        else if (arg.find("--hard_rscu_thresh=") == 0)
+        {
+            try
+            {
+                hard_rscu_threshold = std::stod(arg.substr(19));
+                user_set_hard_rscu_threshold = true;
+            }
+            catch (...)
+            {
+                throw_formatted_error("Error: Hard RSCU threshold must be a positive number.");
+            }
+        }
+        else if (arg.find("--gc_end_rscu_thresh=") == 0)
+        {
+            try
+            {
+                gc_end_rscu_threshold = std::stod(arg.substr(21));
+                user_set_gc_end_rscu_threshold = true;
             }
             catch (...)
             {
@@ -1440,6 +1480,7 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char 
             try
             {
                 rscu_alpha = std::stod(arg.substr(13));
+                user_set_alpha = true;
             }
             catch (...)
             {
@@ -1476,30 +1517,30 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char 
     validate_user_prot_input(init_target_protein, tables.reduced_codon_table);
     validate_user_num_seq_input(num_sequences);
 
-    if (hard_rscu_filter && soft_rscu_filter)
+    if (user_set_hard_rscu_threshold && user_set_soft_rscu_threshold)
     {
-        throw_formatted_error("Error: Cannot both soft- and hard-filter RSCU. Set only one to true.");
+        throw_formatted_error("Error: Cannot both soft- and hard-filter RSCU. Define a value for only one.");
     }
 
-    if ((hard_rscu_filter || soft_rscu_filter) && codon_usage_path == "")
+    if ((user_set_hard_rscu_threshold || user_set_soft_rscu_threshold) && codon_usage_path.empty())
     {
-        throw_formatted_error("Error: You must provide a valid path for the --codon_usage_fpath flag when using RSCU filtering.");
+        throw_formatted_error("Error: You must provide a valid path for the codon usage file (--codon_usage_fpath=) when using RSCU filtering.");
     }
 
-    if ((hard_rscu_filter || soft_rscu_filter) && !user_set_rscu_threshold)
+    if (user_set_soft_rscu_threshold && !user_set_rscu_ratio)
     {
         std::ostringstream oss;
-        oss << "Warning: You did not specify an RSCU threshold. Using default ("
-            << std::fixed << std::setprecision(1) << rscu_threshold << ").";
+        oss << "Warning: You did not specify an RSCU ratio for soft filtering. Using default ("
+            << std::fixed << std::setprecision(1) << max_low_rscu_ratio << ").";
 
         print_warning_newline(oss.str());
     }
 
-    if (soft_rscu_filter && !user_set_rscu_ratio)
+    if (user_set_soft_rscu_threshold && !user_set_alpha)
     {
         std::ostringstream oss;
-        oss << "Warning: You did not specify an RSCU ratio. Using default ("
-            << std::fixed << std::setprecision(1) << max_low_rscu_ratio << ").";
+        oss << "Warning: You did not specify an RSCU alpha for soft filtering. Using default ("
+            << std::fixed << std::setprecision(1) << std::showpoint << rscu_alpha << ").";
 
         print_warning_newline(oss.str());
     }
@@ -1511,11 +1552,11 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char 
         init_target_protein,
         tables,
         codon_usage_path,
-        rscu_threshold,
+        hard_rscu_threshold,
+        soft_rscu_threshold,
+        gc_end_rscu_threshold,
         rscu_alpha,
-        max_low_rscu_ratio,
-        hard_rscu_filter,
-        soft_rscu_filter);
+        max_low_rscu_ratio);
 
     SIRIUSConfig config(show_ortools_log, num_workers, 0, relative_gap_limit);
 
@@ -1526,104 +1567,181 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_interactively(SIRIUSTables
 {
     int num_sequences;
     std::string init_target_protein;
-    std::string codon_usage_path;
-    double relative_gap_limit = 0.0;
-    int num_workers = 16;
-    bool show_ortools_log = false;
-    double rscu_threshold = 0.0, rscu_alpha = 4.0, max_low_rscu_ratio = 0.0;
-    bool hard_rscu_filter = false;
-    bool soft_rscu_filter = false;
+    std::string codon_usage_path = "";
+
+    double rscu_alpha = 10.0;
+    double max_low_rscu_ratio = 0.3;
+    double hard_rscu_threshold = 0.5;
+    double soft_rscu_threshold = 0.7;
+    double gc_ending_rscu_threshold = 0.5;
+
+    bool use_hard_rscu = false;
+    bool use_soft_rscu = false;
 
     std::string input;
 
     print_info("Gather your protein: ");
-    std::cin >> init_target_protein;
-    validate_user_prot_input(init_target_protein, tables.reduced_codon_table);
-
-    print_info("And the number of sequences: ");
-    std::cin >> input;
-    try
+    std::getline(std::cin, init_target_protein);
+    if (init_target_protein.empty())
     {
-        num_sequences = std::stoi(input);
-    }
-    catch (const std::invalid_argument &e)
-    {
-        throw_formatted_error("Error: Number of sequences must be an integer.");
-    }
-
-    validate_user_num_seq_input(num_sequences);
-
-    // ---- Hard filter by RSCU? ----
-    print_info("Hard filter by RSCU? (0 or 1): ");
-    std::cin >> input;
-    hard_rscu_filter = (input == "1");
-    // ----
-
-    if (!hard_rscu_filter)
-    {
-        // ---- Soft filter by RSCU? ----
-        print_info("Soft filter by RSCU? (0 or 1): ");
-        std::cin >> input;
-        soft_rscu_filter = (input == "1");
-        // ----
-
-        if (soft_rscu_filter)
-        {
-            // ---- SOFT RSCU ALPHA ----
-            print_info("Soft RSCU alpha (e.g. 4.0): ");
-            std::cin >> input;
-            try
-            {
-                rscu_alpha = std::stod(input);
-            }
-            catch (const std::invalid_argument &e)
-            {
-                throw_formatted_error("Error: Alpha must be a number.");
-            }
-            // ----
-
-            // --- MAX LOW-RSCU RATIO ----
-            print_info("Max low-RSCU ratio (0.0 - 1.0): ");
-            std::cin >> input;
-            try
-            {
-                max_low_rscu_ratio = std::stod(input);
-            }
-            catch (const std::invalid_argument &e)
-            {
-                throw_formatted_error("Error: Max low-RSCU ratio must be a number.");
-            }
-        }
-        // ----
+        init_target_protein = "MALEEINENSTERN";
+        print_info_newline("Setting protein to " + init_target_protein);
     }
     else
     {
-        soft_rscu_filter = 0;
+        validate_user_prot_input(init_target_protein, tables.reduced_codon_table);
     }
 
-    if (soft_rscu_filter || hard_rscu_filter)
+    print_info("And the number of sequences: ");
+    std::getline(std::cin, input);
+    if (input.empty())
     {
-        // ---- Codon usage path ----
-        print_info("Codon usage file path: ");
-        std::cin >> codon_usage_path;
-        validate_file_exists(codon_usage_path, "codon usage file");
-        // ----
-
-        // ---- RSCU THRESHOLD ----
-        print_info("RSCU threshold (e.g. 0.7): ");
-        std::cin >> input;
+        num_sequences = 2;
+        print_info_newline("Setting number of sequences to " + std::to_string(num_sequences));
+    }
+    else
+    {
         try
         {
-            rscu_threshold = std::stod(input);
+            num_sequences = std::stoi(input);
         }
-        catch (const std::invalid_argument &e)
+        catch (...)
         {
-            throw_formatted_error("Error: RSCU threshold must be a positive number.");
+            throw_formatted_error("Error: Number of sequences must be an integer.");
         }
-        // ----
+        validate_user_num_seq_input(num_sequences);
     }
 
-    // Show summary before returning
+    // ---- Hard filter by RSCU? ----
+    print_info("Hard filter by RSCU? (yes or no) [Default no]: ");
+    std::getline(std::cin, input);
+    if (input.empty() || input == "no")
+    {
+        use_hard_rscu = false;
+        hard_rscu_threshold = 0;
+    }
+    else if (input == "yes")
+    {
+        use_hard_rscu = true;
+    }
+    else
+    {
+        print_info_newline("Hä?! Bold of you to assume \"" + input + "\" for hard RSCU filter is valid. Taking that as a no.");
+        use_hard_rscu = false;
+        hard_rscu_threshold = 0;
+    }
+
+    if (!use_hard_rscu)
+    {
+        // ---- Soft filter by RSCU? ----
+        print_info("Soft filter by RSCU? (yes or no) [Default no]: ");
+        std::getline(std::cin, input);
+        if (input.empty() || input == "no")
+        {
+            use_soft_rscu = false;
+            soft_rscu_threshold = 0;
+        }
+        else if (input == "yes")
+        {
+            use_soft_rscu = true;
+        }
+        else
+        {
+            print_info_newline("Hä?! Bold of you to assume \"" + input + "\" for soft RSCU filter is valid. Taking that as a no.");
+            use_soft_rscu = false;
+            soft_rscu_threshold = 0;
+        }
+
+        if (use_soft_rscu)
+        {
+            print_info("Soft RSCU threshold [Default 0.7]: ");
+            std::getline(std::cin, input);
+            if (!input.empty())
+            {
+                try
+                {
+                    soft_rscu_threshold = std::stod(input);
+                    hard_rscu_threshold = 0;
+                }
+                catch (...)
+                {
+                    throw_formatted_error("Error: Soft RSCU threshold must be a number.");
+                }
+            }
+
+            print_info("Soft RSCU alpha [Default 10.0]: ");
+            std::getline(std::cin, input);
+            if (!input.empty())
+            {
+                try
+                {
+                    rscu_alpha = std::stod(input);
+                }
+                catch (...)
+                {
+                    throw_formatted_error("Error: Alpha must be a number.");
+                }
+            }
+
+            print_info("Max low-RSCU ratio [Default 0.3]: ");
+            std::getline(std::cin, input);
+            if (!input.empty())
+            {
+                try
+                {
+                    max_low_rscu_ratio = std::stod(input);
+                }
+                catch (...)
+                {
+                    throw_formatted_error("Error: Max low-RSCU ratio must be a number.");
+                }
+            }
+        }
+    }
+    else
+    {
+        print_info("Hard RSCU threshold [Default 0.5]: ");
+        std::getline(std::cin, input);
+        if (!input.empty())
+        {
+            try
+            {
+                hard_rscu_threshold = std::stod(input);
+                soft_rscu_threshold = 0;
+            }
+            catch (...)
+            {
+                throw_formatted_error("Error: Hard RSCU threshold must be a number.");
+            }
+        }
+
+        print_info("GC-ending RSCU threshold [Default 0.5]: ");
+        std::getline(std::cin, input);
+        if (!input.empty())
+        {
+            try
+            {
+                gc_ending_rscu_threshold = std::stod(input);
+            }
+            catch (...)
+            {
+                throw_formatted_error("Error: GC-ending RSCU threshold must be a number.");
+            }
+        }
+
+        print_info("Codon usage file path: ");
+        std::getline(std::cin, codon_usage_path);
+        validate_file_exists(codon_usage_path, "codon usage file");
+    }
+
+    // Codon usage required if soft filter is enabled too
+    if (use_soft_rscu && codon_usage_path.empty())
+    {
+        print_info("Codon usage file path: ");
+        std::getline(std::cin, codon_usage_path);
+        validate_file_exists(codon_usage_path, "codon usage file");
+    }
+
     print_inputs(init_target_protein, num_sequences);
 
     SIRIUSInstance instance(
@@ -1631,13 +1749,13 @@ std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_interactively(SIRIUSTables
         init_target_protein,
         tables,
         codon_usage_path,
-        rscu_threshold,
+        hard_rscu_threshold,
+        soft_rscu_threshold,
+        gc_ending_rscu_threshold,
         rscu_alpha,
-        max_low_rscu_ratio,
-        hard_rscu_filter,
-        soft_rscu_filter);
+        max_low_rscu_ratio);
 
-    SIRIUSConfig config(show_ortools_log, num_workers, 0, relative_gap_limit);
+    SIRIUSConfig config(false, 16, 0, 0.0); // fixed defaults
 
     return {instance, config};
 }
