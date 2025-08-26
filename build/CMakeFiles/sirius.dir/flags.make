@@ -4,7 +4,7 @@
 # compile CXX with /usr/bin/c++
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/data/home/amohs002/projects/research/SIRIUS_Lex/ortools/include
+CXX_INCLUDES = -I/data/home/amohs002/projects/research/SIRIUS/SIRIUS/ortools/include
 
 CXX_FLAGS = -std=gnu++17
 

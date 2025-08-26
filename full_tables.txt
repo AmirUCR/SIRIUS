@@ -1,0 +1,70 @@
+// std::unordered_map<char, std::string> invariant_codon_table = {
+    //     {'A', "___"}, // {"GCT", "GCC", "GCA", "GCG"}
+    //     {'C', "___"}, // {"TGT", "TGC"}
+    //     {'D', "___"}, // {"GAT", "GAC"}
+    //     {'E', "___"}, // {"GAA", "GAG"}
+    //     {'F', "___"}, // {"TTT", "TTC"}
+    //     {'G', "___"}, // {"GGT", "GGC", "GGA", "GGG"}
+    //     {'H', "___"}, // {"CAT", "CAC"}
+    //     {'I', "___"}, // {"ATT", "ATC", "ATA"}
+    //     {'K', "___"}, // {"AAA", "AAG"}
+    //     {'L', "___"}, // {"TTA", "TTG", "CTT", "CTC", "CTA", "CTG"}
+    //     {'M', "___"},
+    //     {'N', "___"}, // {"AAT", "AAC"}
+    //     {'P', "___"}, // {"CCT", "CCC", "CCA", "CCG"}
+    //     {'Q', "___"}, // {"CAA", "CAG"}
+    //     {'R', "___"}, // {"CGT", "CGC", "CGA", "CGG", "AGA", "AGG"}
+    //     {'S', "___"}, // {"TCT", "TCC", "TCA", "TCG", "AGT", "AGC"}
+    //     {'T', "___"}, // {"ACT", "ACC", "ACA", "ACG"}
+    //     {'V', "___"}, // {"GTT", "GTC", "GTA", "GTG"}
+    //     {'W', "___"}, // TGG
+    //     {'Y', "___"}, // {"TAT", "TAC"}
+    //     {'*', "___"}  // {"TAA", "TAG", "TGA"}
+    // };
+
+    // std::unordered_map<char, std::vector<std::string>> reduced_codon_table = {
+    //     {'A', {"GCA", "GCC", "GCG", "GCT"}},                       // {"GCT", "GCC", "GCA", "GCG"}
+    //     {'C', {"TGC", "TGT"}},                                 // {"TGT", "TGC"}
+    //     {'D', {"GAC", "GAT"}},                                 // {"GAT", "GAC"}
+    //     {'E', {"GAA", "GAG"}},                                 // {"GAA", "GAG"}
+    //     {'F', {"TTC", "TTT"}},                                 // {"TTT", "TTC"}
+    //     {'G', {"GGA", "GGC", "GGG", "GGT"}},                       // {"GGT", "GGC", "GGA", "GGG"}
+    //     {'H', {"CAC", "CAT"}},           // {"CAT", "CAC"}
+    //     {'I', {"ATA", "ATC", "ATT"}},                            // {"ATT", "ATC", "ATA"}
+    //     {'K', {"AAA", "AAG"}},                                 // {"AAA", "AAG"}
+    //     {'L', {"CTA", "CTC", "CTG", "CTT", "TTA", "TTG"}},       // {"TTA", "TTG", "CTT", "CTC", "CTA", "CTG"}
+    //     {'M', {"ATG"}},                                       // {"ATG"}
+    //     {'N', {"AAC", "AAT"}},                                 // {"AAT", "AAC"}
+    //     {'P', {"CCA", "CCC", "CCG", "CCT"}},                       // {"CCT", "CCC", "CCA", "CCG"}
+    //     {'Q', {"CAA", "CAG"}},                                 // {"CAA", "CAG"}
+    //     {'R', {"AGA", "AGG", "CGA", "CGC", "CGG", "CGT"}},       // {"CGT", "CGC", "CGA", "CGG", "AGA", "AGG"}
+    //     {'S', {"AGC", "AGT", "TCA", "TCC", "TCG", "TCT"}}, // {"TCT", "TCC", "TCA", "TCG", "AGT", "AGC"}
+    //     {'T', {"ACA", "ACC", "ACG", "ACT"}},                       // {"ACT", "ACC", "ACA", "ACG"}
+    //     {'V', {"GTA", "GTC", "GTG", "GTT"}},                       // {"GTT", "GTC", "GTA", "GTG"}},
+    //     {'W', {"TGG"}},                                       // {"TGG"}
+    //     {'Y', {"TAC", "TAT"}},                                 // {"TAT", "TAC"}},
+    //     {'*', {"TAA", "TAG", "TGA"}}                          // {"TAA", "TAG", "TGA"}
+    // };
+
+// std::unordered_map<char, int> reduced_codon_lengths_table = {
+    //     {'A', 3},
+    //     {'C', 3},
+    //     {'D', 3},
+    //     {'E', 3},
+    //     {'F', 3},
+    //     {'G', 3},
+    //     {'H', 3},
+    //     {'I', 3},
+    //     {'K', 3},
+    //     {'L', 3},
+    //     {'M', 3},
+    //     {'N', 3},
+    //     {'P', 3},
+    //     {'Q', 3},
+    //     {'R', 3},
+    //     {'S', 3},
+    //     {'T', 3},
+    //     {'V', 3},
+    //     {'W', 3},
+    //     {'Y', 3},
+    //     {'*', 3}};

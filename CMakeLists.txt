@@ -15,4 +15,7 @@ link_directories(${OR_TOOLS_DIR}/lib)
 add_executable(sirius sirius.cpp)
 
 # Link the OR-Tools library
-target_link_libraries(sirius ortools)
+target_link_libraries(sirius
+    PRIVATE
+      ortools
+)

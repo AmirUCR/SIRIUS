@@ -1,33 +1,18 @@
-/****************************************************************/
-/*         LOST, I found there a stone erected in line          */
-/*  WITH ONE OF THE BRIGHTEST STARS OF ALL THE NIGHT SKY VAULT  */
-/*            And I took my time, took off the moss             */
-/*      Washed away the dust and gave A NEW LEASE OF LIFE       */
-/*                      Its MYSTICAL FORCE                      */
-/*    I grab it now and praise this lord of earth and stone     */
-/*                Make passage for souls awaken                 */
-/*    So it returns to WHERE IT'S ALWAYS BEEN with the gods     */
-/*                                                              */
-/*                     From the Sky - Gojira                    */
-/****************************************************************/
 
 #include <map>
-#include <cmath>
 #include <queue>
+#include <deque>
 #include <tuple>
-#include <cctype>
+#include <memory>
 #include <vector>
 #include <string>
 #include <chrono>
-#include <random>
-#include <utility>
 #include <iomanip>
 #include <sstream>
 #include <fstream>
 #include <cstdlib>
 #include <iostream>
 #include <algorithm>
-#include <filesystem>
 
 #include <unordered_map>
 #include <unordered_set>
@@ -46,74 +31,32 @@
 #define BLUE "\033[34;1m"
 #define ORANGE "\033[38;5;208m"
 
-bool quiet = false;
+std::string elapsed_since_start();
 
-// TYPE DEFINITIONS
 using VectorBoolVariables = std::vector<operations_research::sat::BoolVar>;
 using VectorLinearExprs = std::vector<operations_research::sat::LinearExpr>;
 using VectorColumnYVars = std::vector<VectorLinearExprs>;
 using VectorColumnZVars = std::vector<VectorBoolVariables>;
 using VectorCodonBoolVariables = std::vector<VectorBoolVariables>;
-using VectorAminoacidCodonBoolVariables = std::vector<VectorCodonBoolVariables>;
+using VectorAminoacidCodonBoolVariables = std::vector<std::vector<VectorBoolVariables>>;
 using VectorSequenceAminoacidCodonBoolVariables = std::vector<VectorAminoacidCodonBoolVariables>;
-// Type alias for a homology stretch (start index, end index, length)
-using Stretch = std::tuple<int, int, int>;
-// ----------------
-
-// CLASS FORWARD DECLARATIONS
 class SIRIUSTables;
 class SIRIUSInstance;
 class SIRIUSConfig;
-class SIRIUSSolver;
-// --------------------------
-
-// FUNCTION DECLARATIONS
-void scan_for_quiet_flag(int argc, char *argv[]);
-void print_info(const std::string &message);
-void print_info_newline(const std::string &message);
-void print_warning(const std::string &message);
-void print_warning_newline(const std::string &message);
-void print_error(const std::string &message);
-void print_error_newline(const std::string &message);
-std::string format_error(const std::string &message);
-[[noreturn]] void throw_formatted_error(const std::string &message);
-
-void validate_user_prot_input(const std::string &protein,
-                              const std::unordered_map<char, std::vector<std::string>> &reduced_codon_table);
-void validate_user_num_seq_input(int num_sequences);
-void print_inputs(const std::string &protein, int num_sequences);
-
-// SIRIUSInstance gather_inputs_from_yaml(const std::string& path, const SIRIUSTables& tables);
-std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char *argv[], const SIRIUSTables &tables);
-std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_interactively(SIRIUSTables &tables);
-
-std::string elapsed_since_start();
-std::string create_output_folder(const std::string &base = "sirius_out");
-std::string timestamped_filename(const std::string &prefix);
-std::string generate_unique_filename(const std::string &base_name);
-void write_sequences_to_file_and_console(const std::vector<std::string> &sequences,
-                                         const std::string &base_filename = "sirius_out.txt");
-void validate_translated_proteins(const std::vector<std::string> &sequences,
-                                  const std::string &target_protein,
-                                  const SIRIUSTables &tables);
-std::string translate_dna_to_protein(const std::string &dna, const SIRIUSTables &tables);
-
+class SIRIUSSolver; // Type alias for a homology stretch (start index, end index, length)
+using Stretch = std::tuple<int, int, int>;
+std::string translate_dna_to_protein(const std::string &dna, SIRIUSTables &tables);
 std::vector<std::vector<operations_research::sat::BoolVar>> generate_combinations(
     const std::vector<operations_research::sat::BoolVar> &vars,
     const int combination_size);
 std::vector<Stretch> find_homologous_stretches(const std::string &seq1, const std::string &seq2);
-
 std::pair<std::map<std::string, std::vector<Stretch>>, std::unordered_map<int, int>>
 find_all_homologous_stretches_and_count_lengths(const std::vector<std::string> &sequences);
-void print_length_counts(const std::unordered_map<int, int> &length_counts, std::ostream *file_out = nullptr);
+void print_length_counts(const std::unordered_map<int, int> &length_counts);
 void check_response(const operations_research::sat::CpSolverResponse &response);
-// ---------------------
 
-class SIRIUSTables
+struct SIRIUSTables
 {
-public:
-    std::unordered_map<char, std::unordered_map<std::string, double>> rscu_map;
-
     std::unordered_map<char, std::string> invariant_codon_table = {
         {'A', "GC_"}, // {"GCT", "GCC", "GCA", "GCG"}
         {'C', "TG_"}, // {"TGT", "TGC"}
@@ -138,7 +81,32 @@ public:
         {'*', "T__"}  // {"TAA", "TAG", "TGA"}
     };
 
+    // std::unordered_map<char, std::string> invariant_codon_table = {
+    //     {'A', "___"}, // {"GCT", "GCC", "GCA", "GCG"}
+    //     {'C', "___"}, // {"TGT", "TGC"}
+    //     {'D', "___"}, // {"GAT", "GAC"}
+    //     {'E', "___"}, // {"GAA", "GAG"}
+    //     {'F', "___"}, // {"TTT", "TTC"}
+    //     {'G', "___"}, // {"GGT", "GGC", "GGA", "GGG"}
+    //     {'H', "___"}, // {"CAT", "CAC"}
+    //     {'I', "___"}, // {"ATT", "ATC", "ATA"}
+    //     {'K', "___"}, // {"AAA", "AAG"}
+    //     {'L', "___"}, // {"TTA", "TTG", "CTT", "CTC", "CTA", "CTG"}
+    //     {'M', "___"},
+    //     {'N', "___"}, // {"AAT", "AAC"}
+    //     {'P', "___"}, // {"CCT", "CCC", "CCA", "CCG"}
+    //     {'Q', "___"}, // {"CAA", "CAG"}
+    //     {'R', "___"}, // {"CGT", "CGC", "CGA", "CGG", "AGA", "AGG"}
+    //     {'S', "___"}, // {"TCT", "TCC", "TCA", "TCG", "AGT", "AGC"}
+    //     {'T', "___"}, // {"ACT", "ACC", "ACA", "ACG"}
+    //     {'V', "___"}, // {"GTT", "GTC", "GTA", "GTG"}
+    //     {'W', "___"}, // TGG
+    //     {'Y', "___"}, // {"TAT", "TAC"}
+    //     {'*', "___"}  // {"TAA", "TAG", "TGA"}
+    // };
+
     std::set<char> skip_aa = {'M', 'W'};
+    // std::set<char> skip_aa = {};
 
     std::unordered_map<char, std::vector<std::string>> reduced_codon_table = {
         {'A', {"A", "C", "G", "T"}},                       // {"GCT", "GCC", "GCA", "GCG"}
@@ -155,7 +123,7 @@ public:
         {'N', {"C", "T"}},                                 // {"AAT", "AAC"}
         {'P', {"A", "C", "G", "T"}},                       // {"CCT", "CCC", "CCA", "CCG"}
         {'Q', {"A", "G"}},                                 // {"CAA", "CAG"}
-        {'R', {"CT", "CC", "CA", "CG", "AA", "AG"}},       // {"CGT", "CGC", "CGA", "CGG", "AGA", "AGG"}
+        {'R', {"AA", "AG", "CA", "CC", "CG", "CT"}},       // {"CGT", "CGC", "CGA", "CGG", "AGA", "AGG"}
         {'S', {"AGC", "AGT", "TCA", "TCC", "TCG", "TCT"}}, // {"TCT", "TCC", "TCA", "TCG", "AGT", "AGC"}
         {'T', {"A", "C", "G", "T"}},                       // {"ACT", "ACC", "ACA", "ACG"}
         {'V', {"A", "C", "G", "T"}},                       // {"GTT", "GTC", "GTA", "GTG"}},
@@ -163,6 +131,30 @@ public:
         {'Y', {"C", "T"}},                                 // {"TAT", "TAC"}},
         {'*', {"AA", "AG", "GA"}}                          // {"TAA", "TAG", "TGA"}
     };
+
+    // std::unordered_map<char, std::vector<std::string>> reduced_codon_table = {
+    //     {'A', {"GCA", "GCC", "GCG", "GCT"}},                       // {"GCT", "GCC", "GCA", "GCG"}
+    //     {'C', {"TGC", "TGT"}},                                 // {"TGT", "TGC"}
+    //     {'D', {"GAC", "GAT"}},                                 // {"GAT", "GAC"}
+    //     {'E', {"GAA", "GAG"}},                                 // {"GAA", "GAG"}
+    //     {'F', {"TTC", "TTT"}},                                 // {"TTT", "TTC"}
+    //     {'G', {"GGA", "GGC", "GGG", "GGT"}},                       // {"GGT", "GGC", "GGA", "GGG"}
+    //     {'H', {"CAC", "CAT"}},           // {"CAT", "CAC"}
+    //     {'I', {"ATA", "ATC", "ATT"}},                            // {"ATT", "ATC", "ATA"}
+    //     {'K', {"AAA", "AAG"}},                                 // {"AAA", "AAG"}
+    //     {'L', {"CTA", "CTC", "CTG", "CTT", "TTA", "TTG"}},       // {"TTA", "TTG", "CTT", "CTC", "CTA", "CTG"}
+    //     {'M', {"ATG"}},                                       // {"ATG"}
+    //     {'N', {"AAC", "AAT"}},                                 // {"AAT", "AAC"}
+    //     {'P', {"CCA", "CCC", "CCG", "CCT"}},                       // {"CCT", "CCC", "CCA", "CCG"}
+    //     {'Q', {"CAA", "CAG"}},                                 // {"CAA", "CAG"}
+    //     {'R', {"AGA", "AGG", "CGA", "CGC", "CGG", "CGT"}},       // {"CGT", "CGC", "CGA", "CGG", "AGA", "AGG"}
+    //     {'S', {"AGC", "AGT", "TCA", "TCC", "TCG", "TCT"}}, // {"TCT", "TCC", "TCA", "TCG", "AGT", "AGC"}
+    //     {'T', {"ACA", "ACC", "ACG", "ACT"}},                       // {"ACT", "ACC", "ACA", "ACG"}
+    //     {'V', {"GTA", "GTC", "GTG", "GTT"}},                       // {"GTT", "GTC", "GTA", "GTG"}},
+    //     {'W', {"TGG"}},                                       // {"TGG"}
+    //     {'Y', {"TAC", "TAT"}},                                 // {"TAT", "TAC"}},
+    //     {'*', {"TAA", "TAG", "TGA"}}                          // {"TAA", "TAG", "TGA"}
+    // };
 
     std::unordered_map<char, int> reduced_codon_lengths_table = {
         {'A', 1},
@@ -186,6 +178,29 @@ public:
         {'W', 0},
         {'Y', 1},
         {'*', 2}};
+
+    // std::unordered_map<char, int> reduced_codon_lengths_table = {
+    //     {'A', 3},
+    //     {'C', 3},
+    //     {'D', 3},
+    //     {'E', 3},
+    //     {'F', 3},
+    //     {'G', 3},
+    //     {'H', 3},
+    //     {'I', 3},
+    //     {'K', 3},
+    //     {'L', 3},
+    //     {'M', 3},
+    //     {'N', 3},
+    //     {'P', 3},
+    //     {'Q', 3},
+    //     {'R', 3},
+    //     {'S', 3},
+    //     {'T', 3},
+    //     {'V', 3},
+    //     {'W', 3},
+    //     {'Y', 3},
+    //     {'*', 3}};
 
     std::unordered_map<std::string, char> translate_codon_table = {
         // Phenylalanine
@@ -273,137 +288,49 @@ public:
         {"TAA", '*'},
         {"TAG", '*'},
         {"TGA", '*'}};
-
-    void build_rscu_map_from_csv(const std::string &filename)
-    {
-        std::ifstream infile(filename);
-        if (!infile.is_open())
-        {
-            throw_formatted_error("Error: Cannot open RSCU CSV file.");
-        }
-
-        std::string line;
-        std::getline(infile, line); // Skip header
-        int line_number = 1;
-
-        while (std::getline(infile, line))
-        {
-            ++line_number;
-
-            std::stringstream ss(line);
-            std::string aa_str, tmp1, codon, tmp2, rscu_str, tmp3;
-
-            std::getline(ss, aa_str, ',');   // AmOneLet
-            std::getline(ss, tmp1, ',');     // AmAcid
-            std::getline(ss, codon, ',');    // Codon
-            std::getline(ss, tmp2, ',');     // Percentage
-            std::getline(ss, rscu_str, ','); // RSCU
-            std::getline(ss, tmp3, ',');     // GC3
-
-            if (aa_str.empty() || codon.size() != 3 || rscu_str.empty())
-            {
-                throw_formatted_error("Error: Malformed RSCU CSV line " + std::to_string(line_number) + ": " + line);
-            }
-
-            char aa = aa_str[0];
-            double rscu = 0.0;
-            try
-            {
-                rscu = std::stod(rscu_str);
-            }
-            catch (const std::invalid_argument &)
-            {
-                throw_formatted_error("Error: RSCU value on line " + std::to_string(line_number) + " could not be converted.");
-            }
-
-            auto it = this->invariant_codon_table.find(aa);
-            if (it == this->invariant_codon_table.end())
-            {
-                throw_formatted_error("Error: Amino acid '" + std::to_string(aa) + "' on line " + std::to_string(line_number) + " is unknown.");
-            }
-
-            const std::string &pattern = it->second;
-            std::string varying_part;
-
-            for (size_t i = 0; i < pattern.size(); ++i)
-            {
-                if (pattern[i] == '_')
-                {
-                    varying_part += codon[i];
-                }
-            }
-
-            if (!varying_part.empty())
-            {
-                this->rscu_map[aa][varying_part] = rscu;
-            }
-        }
-    }
 };
 
 class SIRIUSInstance
 {
 public:
     int n;
+    int max_priority;
     int decidable_protein_length;
-    double hard_rscu_threshold;
-    double soft_rscu_threshold;
-    double gc_ending_rscu_threshold;
-    double rscu_alpha;
-    double max_low_rscu_ratio;
-    bool hard_filter_by_rscu = false;
-    bool soft_filter_by_rscu = false;
-    ;
-
-    std::string codon_usage_path;
-
+    int warm_start_largest_fragment_length;
     SIRIUSTables tables;
     std::string dna_with_holes;
+    std::string target_protein;
     std::string decidable_protein;
-    std::string init_target_protein;
-
-    SIRIUSInstance() = default;
+    std::vector<std::vector<std::string>> warm_start_solution_seqs;
 
     SIRIUSInstance(
         int n,
-        std::string init_target_protein,
+        std::string target_protein,
         SIRIUSTables tables,
-        std::string codon_usage_path,
-        double hard_rscu_threshold,
-        double soft_rscu_threshold,
-        double gc_ending_rscu_threshold,
-        double rscu_alpha,
-        double max_low_rscu_ratio)
+        const std::string &warm_start_path = "")
         : n(n),
-          init_target_protein(std::move(init_target_protein)),
-          tables(std::move(tables)),
-          codon_usage_path(std::move(codon_usage_path)),
-          hard_rscu_threshold(hard_rscu_threshold),
-          soft_rscu_threshold(soft_rscu_threshold),
-          gc_ending_rscu_threshold(gc_ending_rscu_threshold),
-          rscu_alpha(rscu_alpha),
-          max_low_rscu_ratio(max_low_rscu_ratio)
+          target_protein(std::move(target_protein)),
+          tables(std::move(tables))
     {
-        std::transform(
-            this->init_target_protein.begin(),
-            this->init_target_protein.end(),
-            this->init_target_protein.begin(), ::toupper);
+        if (!warm_start_path.empty())
+        {
+            this->warm_start_solution_seqs = process_warm_start_file(
+                warm_start_path,
+                this->tables.invariant_codon_table,
+                this->tables.translate_codon_table,
+                this->tables.skip_aa);
 
-        if (this->hard_rscu_threshold > 0)
-        {
-            this->hard_filter_by_rscu = true;
-        }
-        if (this->soft_rscu_threshold > 0)
-        {
-            this->soft_filter_by_rscu = true;
+            this->warm_start_largest_fragment_length = find_max_fragment_length_from_seqs(this->warm_start_solution_seqs);
         }
 
+        this->max_priority = 0;
         this->dna_with_holes = "";
         this->decidable_protein = "";
         this->decidable_protein_length = 0;
 
-        for (const char c : this->init_target_protein)
+        for (const char c : this->target_protein)
         {
+            max_priority += this->tables.reduced_codon_lengths_table[c];
             dna_with_holes += this->tables.invariant_codon_table[c];
 
             if (this->tables.skip_aa.find(c) == this->tables.skip_aa.end())
@@ -413,6 +340,110 @@ public:
             }
         }
     }
+
+    std::vector<std::vector<std::string>> process_warm_start_file(
+        const std::string &filename,
+        const std::unordered_map<char, std::string> &codon_table,
+        const std::unordered_map<std::string, char> &translate_codon_table,
+        const std::set<char> &skip_aa_table,
+        int codon_length = 3)
+    {
+        std::string line;
+        std::ifstream infile(filename);
+        std::vector<std::vector<std::string>> seqs;
+
+        // Read and process each warm start sequence
+        while (std::getline(infile, line))
+        {
+            std::string protein_translation = translate_dna_to_protein(line, tables);
+            if (protein_translation != target_protein)
+            {
+                std::cerr << "Error: sequence '" << line
+                          << "' translates to '" << protein_translation
+                          << "' which does not match target protein '" << target_protein << "'\n";
+                std::exit(EXIT_FAILURE);
+            }
+
+            std::vector<std::string> variable_bases_of_codons;
+
+            for (int i = 0; i + (codon_length - 1) < line.size(); i += codon_length)
+            {
+                std::string codon = line.substr(i, codon_length);
+                char aa = translate_codon_table.at(codon);
+
+                if (skip_aa_table.find(aa) != skip_aa_table.end())
+                {
+                    continue;
+                }
+
+                std::string bases = codon_table.at(aa);
+                std::string variable_bases = "";
+
+                for (int base_i = 0; base_i < bases.size(); ++base_i)
+                {
+                    if (bases.at(base_i) == '_')
+                    {
+                        variable_bases += codon.at(base_i);
+                    }
+                }
+
+                if (!variable_bases.empty())
+                {
+                    variable_bases_of_codons.push_back(variable_bases);
+                }
+            }
+
+            seqs.push_back(variable_bases_of_codons);
+        }
+
+        return seqs;
+    }
+
+    int find_max_fragment_length_from_seqs(const std::vector<std::vector<std::string>> &seqs)
+    {
+        int max_length = 0;
+
+        // Flatten each warm-start sequence (vector<string> --> string)
+        std::vector<std::string> flat_seqs;
+        for (const auto &seq : seqs)
+        {
+            std::string flat;
+            for (const std::string &token : seq)
+            {
+                flat += token;
+            }
+            flat_seqs.push_back(flat);
+        }
+
+        // Compare every unique pair of sequences
+        for (size_t i = 0; i < flat_seqs.size(); ++i)
+        {
+            for (size_t j = i + 1; j < flat_seqs.size(); ++j)
+            {
+                const std::string &s1 = flat_seqs[i];
+                const std::string &s2 = flat_seqs[j];
+
+                int current = 0;
+                int local_max = 0;
+                for (size_t k = 0; k < std::min(s1.size(), s2.size()); ++k)
+                {
+                    if (s1[k] == s2[k])
+                    {
+                        ++current;
+                        local_max = std::max(local_max, current);
+                    }
+                    else
+                    {
+                        current = 0;
+                    }
+                }
+
+                max_length = std::max(max_length, local_max);
+            }
+        }
+
+        return max_length;
+    }
 };
 
 // https://github.com/google/or-tools/blob/stable/ortools/sat/sat_parameters.proto
@@ -420,7 +451,6 @@ class SIRIUSConfig
 {
 public:
     operations_research::sat::SatParameters parameters;
-    SIRIUSConfig() = default;
 
     SIRIUSConfig(
         bool log_search_progress,
@@ -434,335 +464,227 @@ public:
         parameters.set_linearization_level(linearization_level);
         parameters.set_relative_gap_limit(relative_gap_limit);
         parameters.set_fix_variables_to_their_hinted_value(fix_variables_to_their_hinted_value);
+        // parameters.set_max_time_in_seconds(60);
     }
 };
 
 class SIRIUSSolver
 {
 public:
-    std::mt19937 gen;
-    std::uniform_real_distribution<> dis;
-
     SIRIUSTables tables;
     SIRIUSConfig config;
     SIRIUSInstance instance;
 
-    operations_research::sat::CpModelBuilder cp_model;
+    operations_research::sat::CpModelBuilder base_cp_model;
     operations_research::sat::CpSolverResponse response;
-    std::unique_ptr<operations_research::sat::Model> model;
 
     int dna_size;
-    int codon_len;
+    int max_priority;
+    int target_protein_length;
     int decidable_protein_length;
-
     std::string dna_with_holes;
     std::string decidable_protein;
-
     VectorBoolVariables all_vars;
-    VectorColumnYVars all_pairs_y_terms;
-    VectorColumnZVars all_pairs_z_terms;
-    operations_research::sat::LinearExpr objective;
-    VectorSequenceAminoacidCodonBoolVariables sequence_vars_list;
-    std::vector<operations_research::sat::IntVar> additive_obj_mults;
-    std::vector<bool> aa_position_has_been_messed_with;
+    std::vector<std::vector<operations_research::sat::IntVar>> codon_idx;
+    std::unordered_map<std::string, int> map_var_name_to_val;
+
     std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>> sequence_codons_list;
+    std::vector<std::vector<operations_research::sat::BoolVar>> all_obj_mults;
+    std::vector<int> all_obj_vals;
+    std::vector<int> prev_var_indices;
+    std::vector<std::vector<operations_research::sat::BoolVar>> all_pairs_z_terms;
+    VectorSequenceAminoacidCodonBoolVariables sequence_vars_list;
 
     SIRIUSSolver(SIRIUSInstance instance, SIRIUSConfig config, SIRIUSTables tables)
         : instance(std::move(instance)),
           config(std::move(config)),
-          tables(std::move(tables)),
-          model(std::make_unique<operations_research::sat::Model>()),
-          cp_model(),
-          gen(std::random_device{}()), // gen(42), // todo make injectable
-          dis(0.0, 1.0)
+          tables(std::move(tables))
     {
-        this->codon_len = 3;
-        this->dna_with_holes = "";
+        this->max_priority = 0;
         this->decidable_protein_length = 0;
+        this->dna_with_holes = "";
 
-        this->dna_size = this->instance.init_target_protein.size() * 3;
+        this->dna_size = this->instance.target_protein.size() * 3;
+        this->target_protein_length = this->instance.target_protein.size();
+        this->max_priority = this->instance.max_priority;
         this->dna_with_holes = this->instance.dna_with_holes;
         this->decidable_protein = this->instance.decidable_protein;
         this->decidable_protein_length = this->instance.decidable_protein_length;
-
-        aa_position_has_been_messed_with = std::vector<bool>(this->decidable_protein_length, false);
     }
 
-    void init_new_model()
+    void assign_var_values_from_solution()
     {
-        cp_model = operations_research::sat::CpModelBuilder();
-        model = std::make_unique<operations_research::sat::Model>();
-        model->Add(operations_research::sat::NewSatParameters(this->config.parameters));
+        std::cout << "Assigning var vals from solution...\n";
+        for (int s = 0; s < this->instance.n; ++s)
+        {
+            for (int t = s + 1; t < this->instance.n; ++t)
+            {
+                for (int aa_pos_i = 0; aa_pos_i < this->decidable_protein_length; ++aa_pos_i)
+                {
+                    std::string x = this->instance.warm_start_solution_seqs.at(s).at(aa_pos_i);
+                    std::string y = this->instance.warm_start_solution_seqs.at(t).at(aa_pos_i);
+
+                    std::vector<std::string> codons_vec = this->tables.reduced_codon_table.at(this->decidable_protein.at(aa_pos_i));
+
+                    auto it_x = std::find(codons_vec.begin(), codons_vec.end(), x);
+                    auto it_y = std::find(codons_vec.begin(), codons_vec.end(), y);
+
+                    // Calculate the index by subtracting the beginning iterator
+                    int codon_x_i = std::distance(codons_vec.begin(), it_x);
+                    int codon_y_i = std::distance(codons_vec.begin(), it_y);
+
+                    for (int base_idx = 0; base_idx < this->tables.reduced_codon_lengths_table.at(this->decidable_protein.at(aa_pos_i)); ++base_idx)
+                    {
+                        std::string var_name_x = absl::StrFormat(
+                            "%c%d%d%d%d",
+                            codons_vec.at(codon_x_i).at(base_idx),
+                            s,
+                            aa_pos_i,
+                            codon_x_i,
+                            base_idx);
+
+                        std::string var_name_y = absl::StrFormat(
+                            "%c%d%d%d%d",
+                            codons_vec.at(codon_y_i).at(base_idx),
+                            t,
+                            aa_pos_i,
+                            codon_y_i,
+                            base_idx);
+
+                        this->map_var_name_to_val.at(var_name_x) = 1;
+                        this->map_var_name_to_val.at(var_name_y) = 1;
+                    }
+                }
+            }
+        }
     }
 
-    void build_model()
+    void set_larger_fragment_obj_vals_to_zero()
     {
-        print_info_newline("[" + elapsed_since_start() + "] Construct a model...");
-        // print_info_newline("[" + elapsed_since_start() + "] Creating base vars...");
-        this->sequence_vars_list = (this->instance.hard_filter_by_rscu || this->instance.soft_filter_by_rscu)
-                                       ? add_base_variables_from_rscu()
-                                       : add_base_variables_from_prot();
-
-        // print_info_newline("[" + elapsed_since_start() + "] Creating codon constraints...");
-        this->sequence_codons_list = add_codon_constraints();
-
-        // print_info_newline("[" + elapsed_since_start() + "] Creating symmetry breaking constraints...");
-        add_codon_mult_relaxed_anti_symmetry_constraints();
-
-        // print_info_newline("[" + elapsed_since_start() + "] Creating Y chained vars...");
-        this->all_pairs_y_terms = create_y_chained_vars();
-
-        // print_info_newline("[" + elapsed_since_start() + "] Creating Z chained vars...");
-        this->all_pairs_z_terms = create_z_chained_vars();
-
-        // print_info_newline("[" + elapsed_since_start() + "] Creating additive objective...");
-        this->additive_obj_mults = create_additive_objective();
+        std::cout << "Set larger fragment obj vals to zero...\n";
+        for (int i = this->instance.warm_start_largest_fragment_length; i < this->all_obj_mults.size() + 1; ++i)
+        {
+            this->all_obj_vals[i] = 0;
+        }
     }
 
-    void set_minimize_objective_value()
+    void set_all_var_vals_to_zero()
     {
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Setting minimize objective...\n";
-        this->objective = operations_research::sat::LinearExpr::Sum(this->additive_obj_mults);
-        this->cp_model.Minimize(this->objective);
+        std::cout << "Setting all var vals to zero...\n";
+        for (const operations_research::sat::BoolVar &v : this->all_vars)
+        {
+            this->map_var_name_to_val[v.Name()] = 0;
+        }
     }
 
-    void solve_model()
+    std::vector<int> collect_proto_indices(const VectorBoolVariables &vars)
     {
-        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Solve an enigma...\n";
-        this->response = SolveCpModel(cp_model.Build(), model.get());
+        std::vector<int> idx;
+        for (const operations_research::sat::BoolVar &v : vars)
+        {
+            idx.push_back(v.index());
+        }
+        return idx;
+    }
+
+    operations_research::sat::CpModelBuilder make_new_cp_model()
+    {
+        return operations_research::sat::CpModelBuilder();
+    }
+
+    operations_research::sat::CpModelBuilder clone_cp_model(operations_research::sat::CpModelBuilder &cp_model)
+    {
+        return cp_model.Clone();
+    }
+
+    void init_cp_model(bool use_warmstart, int priority)
+    {
+        std::cout << "Building model...\n";
+        this->base_cp_model = make_new_cp_model();
+
+        std::cout << "Creating base vars...\n";
+        this->sequence_vars_list = add_base_variables(this->base_cp_model);
+
+        std::cout << "Creating codon constraints...\n";
+        this->sequence_codons_list = add_codon_constraints(this->base_cp_model);
+
+        std::cout << "Creating Z chained vars...\n";
+        this->all_pairs_z_terms = create_z_chained_vars(this->base_cp_model);
+
+        std::cout << "Creating lex objs...\n";
+        this->all_obj_vals.resize(priority + 1);
+        this->all_obj_mults.resize(priority + 1);
+        for (int p = priority; p >= 0; --p)
+        {
+            this->all_obj_mults[p] = create_lex_objective(this->base_cp_model, p + 1);
+        }
+
+        if (use_warmstart)
+        {
+            set_larger_fragment_obj_vals_to_zero();
+        }
+    }
+
+    void set_minimize_objective_value(operations_research::sat::CpModelBuilder &cp_model, const int current_priority)
+    {
+        std::cout << "Setting minimize objective...\n";
+        operations_research::sat::LinearExpr obj;
+        for (operations_research::sat::BoolVar &v : this->all_obj_mults[current_priority])
+        {
+            obj += cp_model.GetBoolVarFromProtoIndex(v.index());
+        }
+        cp_model.Minimize(obj);
+    }
+
+   void add_hints(operations_research::sat::CpModelBuilder& cp_model)
+    {
+        std::cout << "Adding hints from prev solve...\n";
+        for (const operations_research::sat::BoolVar& v_old : all_vars)
+        {
+            auto it = map_var_name_to_val.find(v_old.Name());
+            if (it == map_var_name_to_val.end())
+            {
+                continue;
+            }
+
+            // Re-acquire the variable from THIS clone by proto index.
+            operations_research::sat::BoolVar v_clone = cp_model.GetBoolVarFromProtoIndex(v_old.index());
+            cp_model.AddHint(v_clone, it->second);
+        }
+    }
+
+
+    void solve_model(operations_research::sat::CpModelBuilder &cp_model)
+    {
+        std::cout << "Solving model...\n";
+        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Solving...\n";
+
+        operations_research::sat::Model sat_model;
+        sat_model.Add(operations_research::sat::NewSatParameters(config.parameters));
+        this->response = SolveCpModel(cp_model.Build(), &sat_model);
         check_response(this->response);
     }
 
-    std::vector<std::vector<std::string>> generate_sequence_codons_with_soft_rscu()
+    void store_solution(const int current_priority)
     {
-        // Map each amino acid to all positions it occurs at in the decidable protein
-        std::unordered_map<char, std::vector<int>> aa_to_positions;
-        std::unordered_map<char, std::unordered_map<std::string, int>> num_issued_codons;
-        std::unordered_map<char, std::unordered_map<std::string, int>> max_allowed_per_codon;
-        std::vector<std::vector<std::string>> sequence_codons(this->decidable_protein_length);
-        std::unordered_set<char> unique_aminoacids(this->decidable_protein.begin(), this->decidable_protein.end());
+        std::cout << "Storing solution...\n";
+        this->map_var_name_to_val.clear();
 
-        for (const char &aa : unique_aminoacids)
+        for (const operations_research::sat::BoolVar &v : all_vars)
         {
-            int count_of_aa = std::count(this->decidable_protein.begin(), this->decidable_protein.end(), aa);
-
-            for (const std::string &codon : this->tables.reduced_codon_table.at(aa))
-            {
-                double rscu = this->tables.rscu_map.at(aa).at(codon);
-
-                num_issued_codons[aa][codon] = 0;
-
-                // Marked for Russian roulette!
-                if (rscu < this->instance.soft_rscu_threshold)
-                {
-                    // Allow low-RSCU codon at most X% of times it's possible for this amino acid
-                    // e.g., 30% of the total positions where this AA occurs
-                    int max_count = std::ceil(this->instance.max_low_rscu_ratio * count_of_aa);
-                    max_allowed_per_codon[aa][codon] = max_count;
-                }
-            }
+            this->map_var_name_to_val[v.Name()] = operations_research::sat::SolutionIntegerValue(this->response, v);
         }
 
-        // Save the occurrence positions of the protein's AA's
-        for (int i = 0; i < this->decidable_protein.size(); ++i)
-        {
-            aa_to_positions[this->decidable_protein.at(i)].push_back(i);
-        }
-
-        // Go through each aa and its positions
-        for (auto &[aa, positions] : aa_to_positions)
-        {
-            // Random shuffle so we don't run out of
-            // low-RSCU codons by the end of the protein
-            std::shuffle(positions.begin(), positions.end(), this->gen);
-
-            for (int p : positions)
-            {
-                std::vector<std::string> codons;
-
-                double largest_rscu = 0;
-                bool at_least_one_passed = false;
-                std::string codon_w_largest_rscu = "";
-
-                for (const std::string &codon : this->tables.reduced_codon_table.at(aa))
-                {
-                    double rscu = this->tables.rscu_map.at(aa).at(codon);
-
-                    if (rscu > largest_rscu)
-                    {
-                        largest_rscu = rscu;
-                        codon_w_largest_rscu = codon;
-                    }
-
-                    // Russian roulette time!
-                    if (rscu < this->instance.soft_rscu_threshold)
-                    {
-                        // Enforce max use cap
-                        if (num_issued_codons.at(aa).at(codon) >= max_allowed_per_codon.at(aa).at(codon))
-                        {
-                            this->aa_position_has_been_messed_with.at(p) = true;
-                            continue;
-                        }
-
-                        double normalized = std::max(0.0, std::min(1.0, rscu / this->instance.soft_rscu_threshold));
-                        double probability = std::exp(-this->instance.rscu_alpha * (1.0 - normalized));
-
-                        // Jetzt hast du Pech gehabt.
-                        if (this->dis(this->gen) > probability)
-                        {
-                            this->aa_position_has_been_messed_with.at(p) = true;
-                            continue;
-                        }
-
-                        num_issued_codons.at(aa).at(codon) += 1;
-                    }
-
-                    codons.push_back(codon);
-                    at_least_one_passed = true;
-                }
-
-                // If nothing passes the threshold, add the codon w/ highest RSCU
-                if (!at_least_one_passed)
-                {
-                    // std::ostringstream oss;
-                    // oss << "Warning: None of the codons for amino acid "
-                    //     << aa << " position " << std::to_string(p + 1) << " pass the set RSCU threshold ("
-                    //     << this->instance.rscu_threshold << "). Letting "
-                    //     << codon_w_largest_rscu << " with the largest RSCU ("
-                    //     << largest_rscu << ") through.";
-                    // print_warning_newline(oss.str());
-
-                    codons.push_back(codon_w_largest_rscu);
-                }
-
-                sequence_codons.at(p) = codons;
-            }
-        }
-
-        return sequence_codons;
+        this->all_obj_vals[current_priority] = this->response.objective_value();
     }
 
-    std::vector<std::vector<std::string>> generate_sequence_codons_with_hard_rscu()
+    std::vector<std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>>>
+    add_base_variables(operations_research::sat::CpModelBuilder &cp_model)
     {
-        std::vector<std::vector<std::string>> sequence_codons(this->decidable_protein_length);
-
-        for (int i = 0; i < this->decidable_protein.size(); ++i)
-        {
-            char aa = this->decidable_protein.at(i);
-
-            std::vector<std::string> codons;
-
-            double largest_rscu = 0;
-            bool at_least_one_passed = false;
-            std::string codon_w_largest_rscu = "";
-
-            for (const std::string &codon : this->tables.reduced_codon_table.at(aa))
-            {
-                std::string full_codon = "";
-
-                int reduced_codon_idx = 0;
-                for (const char &c : this->tables.invariant_codon_table.at(aa))
-                {
-                    if (c != '_')
-                    {
-                        full_codon += c;
-                    }
-                    else
-                    {
-                        full_codon += codon.at(reduced_codon_idx);
-                        ++reduced_codon_idx;
-                    }
-                }
-
-                double rscu = this->tables.rscu_map.at(aa).at(codon);
-
-                if (rscu > largest_rscu)
-                {
-                    largest_rscu = rscu;
-                    codon_w_largest_rscu = codon;
-                }
-
-                // Axed.
-                if (rscu < this->instance.hard_rscu_threshold)
-                {
-                    continue;
-                }
-
-                if (rscu < this->instance.gc_ending_rscu_threshold &&
-                    (full_codon.back() != 'G' && full_codon.back() != 'C'))
-                {
-                    continue;
-                }
-
-                codons.push_back(codon);
-                at_least_one_passed = true;
-            }
-
-            // If nothing passes the threshold, add the codon w/ highest RSCU
-            if (!at_least_one_passed)
-            {
-                codons.push_back(codon_w_largest_rscu);
-            }
-
-            sequence_codons.push_back(codons);
-        }
-
-        return sequence_codons;
-    }
-
-    std::vector<std::vector<std::string>> generate_sequence_codons_with_rscu()
-    {
-        return (this->instance.soft_filter_by_rscu) ? generate_sequence_codons_with_soft_rscu() : generate_sequence_codons_with_hard_rscu();
-    }
-
-    VectorSequenceAminoacidCodonBoolVariables add_base_variables_from_rscu()
-    {
+        int counter = 0;
         // Variables for each base
         VectorSequenceAminoacidCodonBoolVariables sequence_vars_list;
-
-        for (int sequence_n = 0; sequence_n < this->instance.n; ++sequence_n)
-        {
-            VectorAminoacidCodonBoolVariables this_sequence_vars_list_of_list;
-            std::vector<std::vector<std::string>> sequence_with_codons = generate_sequence_codons_with_rscu();
-
-            for (int amino_acid_position = 0; amino_acid_position < sequence_with_codons.size(); ++amino_acid_position)
-            {
-                VectorCodonBoolVariables codon_vars_list;
-
-                for (size_t codon_number = 0; codon_number < sequence_with_codons.at(amino_acid_position).size(); ++codon_number)
-                {
-                    const std::string &codon = sequence_with_codons.at(amino_acid_position).at(codon_number);
-
-                    VectorBoolVariables base_vars_list;
-                    for (size_t base_idx = 0; base_idx < codon.size(); ++base_idx)
-                    {
-                        std::string var_name = absl::StrFormat(
-                            "%c%d%d%d%d",
-                            codon[base_idx],
-                            sequence_n,
-                            amino_acid_position,
-                            codon_number,
-                            base_idx);
-
-                        operations_research::sat::BoolVar new_bool_var = this->cp_model.NewBoolVar().WithName(var_name);
-
-                        this->all_vars.push_back(new_bool_var);
-                        base_vars_list.push_back(new_bool_var);
-                    }
-                    codon_vars_list.push_back(base_vars_list);
-                }
-                this_sequence_vars_list_of_list.push_back(codon_vars_list);
-            }
-            sequence_vars_list.push_back(this_sequence_vars_list_of_list);
-        }
-
-        return sequence_vars_list;
-    }
-
-    VectorSequenceAminoacidCodonBoolVariables add_base_variables_from_prot()
-    {
-        // Variables for each base
-        VectorSequenceAminoacidCodonBoolVariables sequence_vars_list;
+        this->codon_idx.assign(this->instance.n, std::vector<operations_research::sat::IntVar>(decidable_protein_length));
 
         for (int sequence_n = 0; sequence_n < this->instance.n; ++sequence_n)
         {
@@ -771,14 +693,17 @@ public:
             for (int amino_acid_position = 0; amino_acid_position < this->decidable_protein_length; ++amino_acid_position)
             {
                 char amino_acid = this->decidable_protein[amino_acid_position];
-                VectorCodonBoolVariables codon_vars_list;
+                const std::vector<std::string> &codon_list = this->tables.reduced_codon_table.at(amino_acid);
+                int codon_list_size = static_cast<int>(codon_list.size());
+                std::vector<std::vector<operations_research::sat::BoolVar>> codon_vars_list;
 
-                for (size_t codon_number = 0; codon_number < this->tables.reduced_codon_table.at(amino_acid).size(); ++codon_number)
+                for (size_t codon_number = 0; codon_number < codon_list_size; ++codon_number)
                 {
-                    const std::string &codon = this->tables.reduced_codon_table.at(amino_acid).at(codon_number);
-
+                    const std::string &codon = codon_list.at(codon_number);
+                    int codon_length = static_cast<int>(codon.length());
                     VectorBoolVariables base_vars_list;
-                    for (size_t base_idx = 0; base_idx < this->tables.reduced_codon_lengths_table.at(amino_acid); ++base_idx)
+
+                    for (size_t base_idx = 0; base_idx < codon_length; ++base_idx)
                     {
                         std::string var_name = absl::StrFormat(
                             "%c%d%d%d%d",
@@ -788,7 +713,8 @@ public:
                             codon_number,
                             base_idx);
 
-                        operations_research::sat::BoolVar new_bool_var = this->cp_model.NewBoolVar().WithName(var_name);
+                        operations_research::sat::BoolVar new_bool_var = cp_model.NewBoolVar().WithName(var_name);
+                        ++counter;
 
                         this->all_vars.push_back(new_bool_var);
                         base_vars_list.push_back(new_bool_var);
@@ -800,11 +726,13 @@ public:
             sequence_vars_list.push_back(this_sequence_vars_list_of_list);
         }
 
+        std::cout << "Created " << counter << " base vars\n";
         return sequence_vars_list;
     }
 
-    std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>> add_codon_constraints()
+    std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>> add_codon_constraints(operations_research::sat::CpModelBuilder &cp_model)
     {
+        int counter = 0;
         std::vector<std::vector<std::vector<operations_research::sat::BoolVar>>> sequence_codons_list;
 
         // Constraints for Valid Codons
@@ -818,21 +746,36 @@ public:
 
                 for (const auto &codon_vars_list : codon_vars_list_of_lists)
                 {
-                    std::string var_name;
+                    if (codon_vars_list.size() == 1)
+                    {
+                        codon_mult_list.push_back(codon_vars_list.at(0));
+                        continue;
+                    }
+
+                    std::string var_name = "codon_";
                     for (const auto &var : codon_vars_list)
                     {
                         var_name += var.Name();
                     }
 
-                    operations_research::sat::BoolVar mult = this->cp_model.NewBoolVar().WithName(var_name);
+                    operations_research::sat::BoolVar mult = cp_model.NewBoolVar().WithName(var_name);
+                    ++counter;
 
-                    const int group_size = codon_vars_list.size();
-                    operations_research::sat::LinearExpr group_sum = operations_research::sat::LinearExpr::Sum(codon_vars_list);
-                    // Enforce bi-directional implication
-                    this->cp_model.AddEquality(group_sum, group_size).OnlyEnforceIf(mult);
-                    this->cp_model.AddLessThan(group_sum, group_size).OnlyEnforceIf(mult.Not());
-
-                    this->cp_model.AddEquality(operations_research::sat::LinearExpr::Sum(codon_vars_list), codon_vars_list.size() * mult);
+                    // mult ⇒ every base var is 1
+                    for (const auto& b : codon_vars_list) {
+                        cp_model.AddImplication(mult, b);
+                    }
+                    // (AND bases) ⇒ mult as one clause: (¬b1 ∨ ¬b2 ∨ ... ∨ mult)
+                    {
+                        std::vector<operations_research::sat::BoolVar> clause;
+                        clause.reserve(codon_vars_list.size() + 1);
+                        clause.push_back(mult);
+                        for (const auto& b : codon_vars_list)
+                        {
+                            clause.push_back(b.Not());
+                        }
+                        cp_model.AddBoolOr(clause);
+                    }
 
                     this->all_vars.push_back(mult);
                     codon_mult_list.push_back(mult);
@@ -841,7 +784,7 @@ public:
                 if (!codon_mult_list.empty())
                 {
                     // Ensure only one codon auxiliary variable is chosen
-                    this->cp_model.AddExactlyOne(codon_mult_list);
+                    cp_model.AddExactlyOne(codon_mult_list);
                     this_sequence_codons.push_back(codon_mult_list);
                 }
             }
@@ -849,226 +792,192 @@ public:
             sequence_codons_list.push_back(this_sequence_codons);
         }
 
+        std::cout << "Created " << counter << " codon mult vars\n";
         return sequence_codons_list;
     }
 
-    std::vector<int> generate_sequence(int n_sequences, int num_codons)
+    std::vector<std::vector<operations_research::sat::BoolVar>> create_z_chained_vars(operations_research::sat::CpModelBuilder &cp_model)
     {
-        std::vector<int> patterns;
-
-        int n_full_cycles = n_sequences / num_codons;
-        int n_remainder_elements = n_sequences % num_codons;
-
-        // Add full cycles of 1..num_codons
-        for (int i = 0; i < n_full_cycles * num_codons; ++i)
-        {
-            patterns.push_back(i % num_codons + 1);
-        }
-
-        // Handle remainder by reusing the tail from the last full cycle (or base sequence if none)
-        int offset = num_codons - n_remainder_elements;
-        for (int i = offset; i < num_codons; ++i)
-        {
-            patterns.push_back(i + 1);
-        }
-
-        return patterns;
-    }
-
-    void add_codon_mult_relaxed_anti_symmetry_constraints()
-    {
-        int n_sequences = this->sequence_codons_list.size();
-
-        for (int k = 0; k < n_sequences - 1; ++k)
-        {
-            int seq_length = this->sequence_codons_list[k].size();
-            std::vector<operations_research::sat::BoolVar> prefix_equal(seq_length);
-
-            for (int pos = 0; pos < seq_length; ++pos)
-            {
-                if (this->aa_position_has_been_messed_with.at(pos))
-                {
-                    continue;
-                }
-
-                // Determine if seq[k] and seq[k+1] codons at this position are equal
-                prefix_equal[pos] = this->cp_model.NewBoolVar();
-                int num_codons = this->sequence_codons_list[k][pos].size();
-
-                std::vector<int> pattern_end_ranges = generate_sequence(n_sequences, num_codons);
-
-                // Equality at this position across all codon variables
-                std::vector<operations_research::sat::BoolVar> codon_equals;
-                for (int c = 0; c < num_codons; ++c)
-                {
-                    operations_research::sat::BoolVar codon_match = cp_model.NewBoolVar();
-                    this->cp_model.AddEquality(this->sequence_codons_list[k][pos][c], this->sequence_codons_list[k + 1][pos][c]).OnlyEnforceIf(codon_match);
-                    this->cp_model.AddNotEqual(this->sequence_codons_list[k][pos][c], this->sequence_codons_list[k + 1][pos][c]).OnlyEnforceIf(codon_match.Not());
-                    codon_equals.push_back(codon_match);
-                }
-                // All codon bits must match to declare equality at this position
-                this->cp_model.AddBoolAnd(codon_equals).OnlyEnforceIf(prefix_equal[pos]);
-
-                std::vector<operations_research::sat::BoolVar> codon_differs;
-                for (const auto &eq : codon_equals)
-                {
-                    codon_differs.push_back(eq.Not());
-                }
-                this->cp_model.AddBoolOr(codon_differs).OnlyEnforceIf(prefix_equal[pos].Not());
-
-                operations_research::sat::BoolVar lex_less_or_equal = this->cp_model.NewBoolVar();
-
-                // Ensures prefix_equal[pos] = AND(codon_equals)
-                // Enforce lex ordering at this position
-                // Create ordering constraint: seq[k] <= seq[k+1]
-                this->cp_model.AddImplication(prefix_equal[pos].Not(), lex_less_or_equal);
-                std::vector<operations_research::sat::BoolVar> selector_vars; // one for each (i,j) pair
-
-                int selector_index = 0;
-
-                int i_wrapping_indexer = k % num_codons;
-                for (int i = i_wrapping_indexer; i < pattern_end_ranges.at(k); ++i)
-                {
-                    int j_wrapping_indexer = (i + 1) % num_codons;
-                    for (int j = j_wrapping_indexer; j < pattern_end_ranges.at(k + 1); ++j)
-                    {
-                        operations_research::sat::BoolVar selector = this->cp_model.NewBoolVar();
-                        selector_vars.push_back(selector);
-
-                        // Enforce the constraint group only if this selector is active
-                        this->cp_model.AddGreaterThan(this->sequence_codons_list[k][pos][i], this->sequence_codons_list[k + 1][pos][i])
-                            .OnlyEnforceIf({lex_less_or_equal, selector});
-
-                        this->cp_model.AddLessThan(this->sequence_codons_list[k][pos][j], this->sequence_codons_list[k + 1][pos][j])
-                            .OnlyEnforceIf({lex_less_or_equal, selector});
-
-                        for (int bi = 0; bi < num_codons; ++bi)
-                        {
-                            if (bi != i && bi != j)
-                            {
-                                this->cp_model.AddLessOrEqual(this->sequence_codons_list[k][pos][bi], this->sequence_codons_list[k + 1][pos][bi])
-                                    .OnlyEnforceIf({lex_less_or_equal, selector});
-                            }
-                        }
-                    }
-                }
-
-                // Create a dummy variable to accumulate the sum of selector_vars
-                operations_research::sat::LinearExpr selector_sum;
-                for (const auto &var : selector_vars)
-                {
-                    selector_sum += var;
-                }
-
-                // selector_sum == 1 <=> exactly one selector is active
-                // Enforce this only if lex_less_or_equal is true
-                this->cp_model.AddEquality(selector_sum, 1).OnlyEnforceIf(lex_less_or_equal);
-            }
-        }
-    }
-
-    VectorColumnYVars create_y_chained_vars()
-    {
-        VectorColumnYVars all_pairs_y_terms;
+        int counter = 0;
+        std::vector<std::vector<operations_research::sat::BoolVar>> all_pairs_z_terms;
 
         for (int s = 0; s < this->instance.n; ++s)
         {
             for (int t = s + 1; t < this->instance.n; ++t)
             {
-                VectorLinearExprs this_pair_y_terms;
+                int colcount = 0;
+                VectorBoolVariables this_pair_z_terms;
 
                 for (int aa_pos_i = 0; aa_pos_i < this->decidable_protein_length; ++aa_pos_i)
                 {
                     for (int codon_i = 0; codon_i < this->tables.reduced_codon_lengths_table.at(this->decidable_protein.at(aa_pos_i)); ++codon_i)
                     {
-                        operations_research::sat::LinearExpr y_terms;
+                        int codon_positions = this->tables.reduced_codon_table.at(this->decidable_protein.at(aa_pos_i)).size();
+                        operations_research::sat::LinearExpr z_terms;
 
-                        for (size_t codon_position_i = 0; codon_position_i < this->sequence_vars_list.at(s).at(aa_pos_i).size(); ++codon_position_i)
+                        for (size_t codon_position_i = 0; codon_position_i < codon_positions; ++codon_position_i)
                         {
                             operations_research::sat::BoolVar x = this->sequence_vars_list.at(s).at(aa_pos_i).at(codon_position_i).at(codon_i);
 
-                            for (size_t codon_position_j = 0; codon_position_j < this->sequence_vars_list.at(t).at(aa_pos_i).size(); ++codon_position_j)
+                            for (size_t codon_position_j = 0; codon_position_j < codon_positions; ++codon_position_j)
                             {
                                 operations_research::sat::BoolVar y = this->sequence_vars_list.at(t).at(aa_pos_i).at(codon_position_j).at(codon_i);
 
                                 std::string var_name = x.Name() + y.Name();
-                                operations_research::sat::BoolVar z = cp_model.NewBoolVar().WithName(var_name);
-
                                 if (x.Name().front() == y.Name().front())
                                 {
-                                    cp_model.AddEquality(z, y).OnlyEnforceIf(x);
-                                    cp_model.AddEquality(z, 0).OnlyEnforceIf(~x);
-                                }
-                                else
-                                {
-                                    cp_model.AddEquality(z, 0);
-                                }
+                                    operations_research::sat::BoolVar z = cp_model.NewBoolVar().WithName(var_name);
+                                    ++counter;
 
-                                // Add z to y_terms
-                                y_terms += z;
-                                all_vars.push_back(z);
+                                    cp_model.AddMultiplicationEquality(z, x, y);
+
+                                    // Add z to z_terms
+                                    z_terms += z;
+                                }
                             }
                         }
-                        this_pair_y_terms.push_back(y_terms);
+                        
+                        std::string var_name = absl::StrFormat("z%d_p%d:%d", colcount, s, t);
+                        operations_research::sat::BoolVar z_j = cp_model.NewBoolVar().WithName(var_name);
+                        colcount += 1;
+
+                        cp_model.AddEquality(z_j, z_terms);
+                        this_pair_z_terms.push_back(z_j);
+                        // this->all_vars.push_back(z_j);
                     }
                 }
-                all_pairs_y_terms.push_back(this_pair_y_terms);
+                all_pairs_z_terms.push_back(this_pair_z_terms);
             }
         }
-        return all_pairs_y_terms;
-    }
 
-    VectorColumnZVars create_z_chained_vars()
-    {
-        VectorColumnZVars all_pairs_z_terms;
-        int colcount = 0;
-
-        for (const std::vector<operations_research::sat::LinearExpr> v : this->all_pairs_y_terms)
-        {
-            VectorBoolVariables this_pair_z_terms;
-
-            for (const operations_research::sat::LinearExpr exp : v)
-            {
-                std::string var_name = absl::StrFormat("z%d", colcount);
-                operations_research::sat::BoolVar z_j = this->cp_model.NewBoolVar().WithName(var_name);
-
-                this->cp_model.AddEquality(z_j, exp);
-
-                this->all_vars.push_back(z_j);
-                this_pair_z_terms.push_back(z_j);
-                colcount += 1;
-            }
-
-            all_pairs_z_terms.push_back(this_pair_z_terms);
-        }
-
+        std::cout << "Created " << counter << " y vars\n";
         return all_pairs_z_terms;
     }
 
-    std::vector<operations_research::sat::IntVar> create_additive_objective()
+    VectorBoolVariables create_lex_objective(
+        operations_research::sat::CpModelBuilder &cp_model,
+        const int current_priority)
     {
-        std::vector<operations_research::sat::IntVar> factored_terms;
+        VectorBoolVariables objective_vars;
 
         for (int i = 0; i < this->all_pairs_z_terms.size(); ++i)
         {
-            operations_research::sat::IntVar y = this->cp_model.NewIntVar({0, 1}).WithName(this->all_pairs_z_terms.at(i).front().Name());
-            this->cp_model.AddEquality(y, this->all_pairs_z_terms.at(i).front());
-            factored_terms.push_back(y);
+            const std::vector<operations_research::sat::BoolVar> &pair_z_terms = this->all_pairs_z_terms.at(i);
+            std::vector<std::vector<operations_research::sat::BoolVar>> this_phase_combos = generate_combinations(
+                pair_z_terms, current_priority);
 
-            for (int j = 1; j < this->all_pairs_z_terms.at(i).size(); ++j)
+            for (const std::vector<operations_research::sat::BoolVar> &vi : this_phase_combos)
             {
-                operations_research::sat::BoolVar x = this->all_pairs_z_terms.at(i).at(j);
-                operations_research::sat::IntVar z = this->cp_model.NewIntVar({0, j + 1}).WithName(x.Name() + "(1 + " + y.Name() + ")");
+                std::string var_name = "";
 
-                this->cp_model.AddEquality(z, 1 + y).OnlyEnforceIf(x);
-                this->cp_model.AddEquality(z, 0).OnlyEnforceIf(x.Not());
+                for (const operations_research::sat::BoolVar &i : vi)
+                {
+                    var_name += i.Name();
+                }
 
-                y = z;
-                factored_terms.push_back(y);
+                operations_research::sat::BoolVar mult = cp_model.NewBoolVar().WithName("mult_" + var_name);
+
+                // ----------------------------
+                // mult ⇒ vi  (for all i)
+                for (auto &v : vi)
+                {
+                    cp_model.AddImplication(mult, v);
+                }
+                // (AND(vi)) ⇒ mult  encoded as a single clause: (¬v1 ∨ ¬v2 ∨ ... ∨ mult)
+                std::vector<operations_research::sat::BoolVar> clause;
+                clause.reserve(vi.size() + 1);
+                clause.push_back(mult);
+                for (auto &v : vi)
+                {
+                    clause.push_back(v.Not());
+                }
+                cp_model.AddBoolOr(clause);
+                // -----------------------------
+
+                // If you have a fragment of length 5 (mult = 1), then there are two fragments of length 4
+                // included within it. These both will be = 1.
+                // This nests further (like a Russian nesting doll): if you have a fragment of length 5
+                // then there are three fragments of length 3 included within. These will all be = 1, and so on.
+
+                // cp_model.AddLessOrEqual(LinearExpr::Sum(this_phase_combos), 1).OnlyEnforceIf(this->all_obj_mults[current_priority + 1][i].Not());
+
+                objective_vars.push_back(mult);
             }
         }
 
-        return factored_terms;
+        return objective_vars;
+    }
+
+    // todo avoid recreating all priorities every lex phase - save them in base?
+    void create_forward_chain_lex_objectives_as_constraints(
+        operations_research::sat::CpModelBuilder &cp_model,
+        const int current_priority)
+    {
+        int num_obj_mults = this->all_obj_mults.size();
+        for (int i = current_priority; i < num_obj_mults; ++i)
+        {
+            std::cout << i << " " << this->all_obj_vals[i] << std::endl;
+
+            operations_research::sat::LinearExpr freeze_expr;
+
+            for (operations_research::sat::BoolVar &v : this->all_obj_mults[i])
+            {
+                // get the cloned var by proto index:
+                freeze_expr += cp_model.GetBoolVarFromProtoIndex(v.index());
+            }
+
+            cp_model.AddLessOrEqual(freeze_expr, this->all_obj_vals[i]);
+        }
+    }
+
+    void idk(
+        operations_research::sat::CpModelBuilder &cp_model,
+        const int current_priority)
+    {
+        int num_obj_mults = this->all_obj_mults.size();
+        for (int i = num_obj_mults - 1; i > current_priority; --i)
+        {
+            if (this->all_obj_vals[i] == 0) continue;
+
+            std::cout << "IDk for " << i << std::endl;
+
+            std::vector<operations_research::sat::BoolVar> larger_fragment_obj_vars;
+            for (operations_research::sat::BoolVar &v : this->all_obj_mults[i])
+            {
+                // get the cloned var by proto index:
+                larger_fragment_obj_vars.push_back(cp_model.GetBoolVarFromProtoIndex(v.index()));
+            }
+
+            std::vector<operations_research::sat::BoolVar> smaller_fragment_obj_vars;
+            for (operations_research::sat::BoolVar &v : this->all_obj_mults[i - 1])
+            {
+                // get the cloned var by proto index:
+                smaller_fragment_obj_vars.push_back(cp_model.GetBoolVarFromProtoIndex(v.index()));
+            }
+
+            int n = this->sequence_vars_list.size();
+            int num_pairs = larger_fragment_obj_vars.size() / (n * (n - 1) / 2);
+
+            for (int j = 0; j < larger_fragment_obj_vars.size(); ++j)
+            {
+                int idx = j;
+
+                if (j % (num_pairs) == 0)
+                {
+                    std::cout << "yes\n";
+                    ++idx;
+                }
+
+                std::cout << larger_fragment_obj_vars[j].Name() << " " <<
+                smaller_fragment_obj_vars[idx].Name() << " and " <<
+                smaller_fragment_obj_vars[idx + 1].Name() << std::endl;
+
+                if (j > 100) exit(1);
+                // cp_model.AddImplication(larger_fragment_obj_vars[j], smaller_fragment_obj_vars[j]);
+                // cp_model.AddImplication(larger_fragment_obj_vars[j], smaller_fragment_obj_vars[j + 1]);
+                // cp_model.AddLessOrEqual(operations_research::sat::LinearExpr::Sum(std::vector<operations_research::sat::BoolVar>(smaller_fragment_obj_vars.begin() + j, smaller_fragment_obj_vars.begin() + j + 2)), 1).OnlyEnforceIf(larger_fragment_obj_vars[j].Not());
+            }
+        }
     }
 };
 
@@ -1076,53 +985,123 @@ int main(int argc, char *argv[])
 {
     // Systematische Identifikation Redundanter, Identisch Uebersetzter Sequenzen
     ::google::InitGoogleLogging("SIRIUS");
-    scan_for_quiet_flag(argc, argv);
-    print_info_newline(std::string("Fly to ") + BLUE + std::string("SIRIUS") + RESET);
 
-    SIRIUSConfig config;
-    SIRIUSTables tables;
-    SIRIUSInstance instance;
+    int num_sequences;
+    std::string init_target_protein;
 
-    if (argc == 1)
+    bool use_warmstart;
+    std::string warm_start_path = "";
+
+    std::cout << BLUE << "> " << RESET << "Welcome to " << BLUE << "SIRIUS" << RESET << std::endl;
+
+    if (argc < 3)
     {
-        // instance = gather_inputs_from_yaml("config.yaml", tables);
-        std::tie(instance, config) = gather_inputs_interactively(tables); // todo
-    }
-    else if (argc == 2 && std::string(argv[1]) == "-i")
-    {
-        std::tie(instance, config) = gather_inputs_interactively(tables);
+        std::cout << BLUE << "> " << RESET << "Enter target protein: ";
+        std::cin >> init_target_protein;
+
+        std::cout << BLUE << "> " << RESET << "Enter number of sequences: ";
+        std::cin >> num_sequences;
     }
     else
     {
-        std::tie(instance, config) = gather_inputs_from_flags(argc, argv, tables);
+        init_target_protein = argv[1];
+        num_sequences = std::stoi(argv[2]);
+
+        for (int i = 3; i < argc; ++i)
+        {
+            std::string arg = argv[i];
+            std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
+            if (arg == "--warmstart=true")
+            {
+                use_warmstart = true;
+            }
+        }
     }
 
-    if (instance.hard_filter_by_rscu || instance.soft_filter_by_rscu)
+    std::cout << BLUE << "> " << RESET << "Creating " << num_sequences << "x " << init_target_protein << std::endl;
+
+    if (use_warmstart)
     {
-        tables.build_rscu_map_from_csv(instance.codon_usage_path);
+        warm_start_path = "warm_start.txt";
+        std::cout << BLUE << "> " << RESET << "Using warm start from " << warm_start_path << std::endl;
     }
 
+    SIRIUSTables tables;
+    SIRIUSConfig config(
+        /*log_search_progress=*/false,
+        /*num_workers=*/32,
+        /*linearization_level=*/3,
+        /*relative_gap_limit=*/0);
+    SIRIUSInstance instance(num_sequences, init_target_protein, tables, warm_start_path);
     SIRIUSSolver sirius_solver(instance, config, tables);
+
+    int current_priority = instance.warm_start_largest_fragment_length;
+
+    if (use_warmstart)
+    {
+        sirius_solver.max_priority = current_priority;
+    }
+    else
+    {
+        current_priority = sirius_solver.max_priority;
+    }
+
+    sirius_solver.init_cp_model(use_warmstart, sirius_solver.max_priority);
+
+    std::cout << BLUE << "> " << RESET << "Max fragment length: " << sirius_solver.max_priority << "\n";
+    std::cout << BLUE << "> " << RESET << "Current fragment length: " << current_priority << "\n";
 
     std::queue<char> int_vars;
 
-    // -----
-    // GO!
-    sirius_solver.init_new_model();
-    sirius_solver.build_model();
-    sirius_solver.set_minimize_objective_value();
-    sirius_solver.solve_model();
+    if (use_warmstart)
+    {
+        operations_research::sat::CpModelBuilder clone = sirius_solver.clone_cp_model(sirius_solver.base_cp_model);
+        sirius_solver.set_all_var_vals_to_zero();
+        sirius_solver.create_forward_chain_lex_objectives_as_constraints(clone, current_priority);
+        sirius_solver.assign_var_values_from_solution();
+        sirius_solver.add_hints(clone);
+        sirius_solver.set_minimize_objective_value(clone, current_priority - 1);
+        sirius_solver.solve_model(clone);
+        sirius_solver.store_solution(current_priority - 1);
+
+        --current_priority;
+    }
+
+    for (current_priority; current_priority > 0; --current_priority)
+    {
+        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Setting up fragments of length " << current_priority << "...\n";
+
+        operations_research::sat::CpModelBuilder clone = sirius_solver.clone_cp_model(sirius_solver.base_cp_model);
+        // sirius_solver.create_lex_objective(clone, current_priority - 1);
+        sirius_solver.create_forward_chain_lex_objectives_as_constraints(clone, current_priority);
+        sirius_solver.idk(clone, current_priority);
+        sirius_solver.add_hints(clone);
+        sirius_solver.set_minimize_objective_value(clone, current_priority - 1);
+        sirius_solver.solve_model(clone);
+        sirius_solver.store_solution(current_priority - 1);
+    }
+
     // -----
 
     // Variables for each base
     // Flatten sequence_vars_list
     std::vector<operations_research::sat::BoolVar> base_vars;
     for (const auto &a : sirius_solver.sequence_vars_list)
+    {
         for (const auto &b : a)
+        {
             for (const auto &c : b)
+            {
                 for (const auto &var : c)
+                {
                     base_vars.push_back(var);
+                }
+            }
+        }
+    }
 
+    // Clear
+    std::queue<char>().swap(int_vars);
     for (const auto &var : base_vars)
     {
         if (operations_research::sat::SolutionIntegerValue(sirius_solver.response, var))
@@ -1134,7 +1113,7 @@ int main(int argc, char *argv[])
     std::string seq;
 
     std::vector<std::string> all_out_seqs;
-    for (int seq_n = 0; seq_n < instance.n; ++seq_n)
+    for (int seq_n = 0; seq_n < num_sequences; ++seq_n)
     {
         std::string this_seq = "";
         for (int i = 0; i < sirius_solver.dna_size; ++i)
@@ -1152,619 +1131,59 @@ int main(int argc, char *argv[])
         all_out_seqs.push_back(this_seq);
     }
 
-    std::string output_folder = create_output_folder();
-    std::string sequences_filename = output_folder + "/" + timestamped_filename("sequences");
-    std::string length_counts_filename = output_folder + "/" + timestamped_filename("length_counts");
+    // File for writing solutions
+    std::ofstream out_file("out.txt");
+    if (!out_file)
+    {
+        std::cerr << "Failed to open output file.\n";
+        return 1;
+    }
+    for (auto seq : all_out_seqs)
+    {
+        std::cout << seq << std::endl;
+        out_file << seq << "\n";
+    }
+    out_file.close();
 
-    write_sequences_to_file_and_console(all_out_seqs, sequences_filename);
-    validate_translated_proteins(all_out_seqs, instance.init_target_protein, tables);
+    for (size_t i = 0; i < all_out_seqs.size(); ++i)
+    {
+        std::string protein = translate_dna_to_protein(all_out_seqs[i], tables);
+
+        std::cout << "Protein " << i + 1 << ": " << protein << "\n";
+        if (protein != init_target_protein)
+        {
+            std::cout << "SEQ " << i << " " << all_out_seqs[i] << " NOT THE SAME\n";
+        }
+    }
 
     auto [all_stretches, length_counts] = find_all_homologous_stretches_and_count_lengths(all_out_seqs);
+    print_length_counts(length_counts);
 
-    try
-    {
-        std::ofstream out_lengths(length_counts_filename);
-        print_length_counts(length_counts, &out_lengths);
-        out_lengths.close();
-    }
-    catch (const std::exception &e)
-    {
-        throw e;
-    }
+    std::cout << BLUE << "> " RESET << "[" << elapsed_since_start() << "] Done.\n";
+
+    return 0;
 }
 
 // ===============================================
-void scan_for_quiet_flag(int argc, char *argv[])
+
+// Create sliding window combinations out of vars depending on combination size
+// E.g., Input: vars = [z1, z2, z3], combination_size = 2
+//       Output: [[z1, z2], [z2, z3]]
+std::vector<std::vector<operations_research::sat::BoolVar>> generate_combinations(
+    const std::vector<operations_research::sat::BoolVar> &vars,
+    const int combination_size)
 {
-    for (int i = 1; i < argc; ++i)
+    std::vector<std::vector<operations_research::sat::BoolVar>> combinations;
+
+    if (combination_size <= 0 || combination_size > vars.size())
+        return combinations;
+
+    for (size_t i = 0; i <= vars.size() - combination_size; ++i)
     {
-        std::string arg = argv[i];
-        std::transform(arg.begin(), arg.end(), arg.begin(), ::tolower);
-
-        if (arg.find("--quiet=") == 0)
-        {
-            // quiet is global
-            quiet = arg.substr(8) == "true";
-        }
-    }
-}
-
-void print_info(const std::string &message)
-{
-    if (!quiet)
-    {
-        std::cout << BLUE << "> " << RESET << message;
-    }
-}
-
-void print_info_newline(const std::string &message)
-{
-    if (!quiet)
-    {
-        std::cout << BLUE << "> " << RESET << message << "\n";
-    }
-}
-
-void print_warning(const std::string &message)
-{
-    if (!quiet)
-    {
-        std::cout << ORANGE << "> " << RESET << message;
-    }
-}
-
-void print_warning_newline(const std::string &message)
-{
-    if (!quiet)
-    {
-        std::cout << ORANGE << "> " << RESET << message << "\n";
-    }
-}
-
-void print_error(const std::string &message)
-{
-    if (!quiet)
-    {
-        std::cout << RED << "> " << RESET << message;
-    }
-}
-
-void print_error_newline(const std::string &message)
-{
-    if (!quiet)
-    {
-        std::cout << RED << "> " << RESET << message << "\n";
-    }
-}
-
-std::string format_error(const std::string &message)
-{
-    return RED + std::string("> ") + RESET + message;
-}
-
-[[noreturn]] void throw_formatted_error(const std::string &message)
-{
-    if (!quiet)
-    {
-        std::cerr << format_error(message) << "\n";
-        std::cout << format_error("Back to Earth.") << "\n";
-    }
-    exit(1);
-}
-
-void validate_user_prot_input(
-    const std::string &protein,
-    const std::unordered_map<char, std::vector<std::string>> &reduced_codon_table)
-{
-    std::unordered_set<char> invalid_aa;
-
-    std::string upper_prot = protein;
-    std::transform(upper_prot.begin(), upper_prot.end(), upper_prot.begin(), ::toupper);
-
-    for (char aa : upper_prot)
-    {
-        if (reduced_codon_table.find(aa) == reduced_codon_table.end())
-        {
-            invalid_aa.insert(aa);
-        }
+        combinations.emplace_back(vars.begin() + i, vars.begin() + i + combination_size);
     }
 
-    if (!invalid_aa.empty())
-    {
-        std::ostringstream oss;
-        oss << "Invalid amino acids in protein sequence: ";
-        for (char aa : invalid_aa)
-        {
-            oss << "'" << aa << "' ";
-        }
-        throw_formatted_error(oss.str());
-    }
-}
-
-void validate_user_num_seq_input(int num_sequences)
-{
-    // Check bounds on number of sequences
-    if (num_sequences <= 1)
-    {
-        throw_formatted_error("Must generate at least 2 sequences.");
-    }
-}
-
-void validate_file_exists(const std::string &filename, const std::string &message)
-{
-    if (!std::filesystem::exists(filename))
-    {
-        throw_formatted_error("Error: file for " + message + " (\"" + filename + "\") does not exist.");
-    }
-}
-
-void print_inputs(const std::string &protein, int num_sequences)
-{
-    // 20 start + 3 dots + 20 end = 43 total
-    if (protein.size() > 43)
-    {
-        std::string to_print;
-        to_print += protein.substr(0, 20);
-        to_print += "...";
-        to_print += protein.substr(protein.size() - 20);
-
-        print_info_newline("Now, in that star's heart, forge " + std::to_string(num_sequences) + "x " + to_print);
-    }
-    else
-    {
-        print_info_newline("Now, in that star's heart, forge " + std::to_string(num_sequences) + "x " + protein);
-    }
-}
-
-// SIRIUSInstance gather_inputs_from_yaml(const std::string& path, const SIRIUSTables& tables)
-// {
-//     YAML::Node config = YAML::LoadFile(path);
-
-//     std::string codon_usage_path = ""; // todo
-
-//     std::string prot = config["Prot"].as<std::string>();
-//     int n = config["num_sequences"].as<int>();
-//     double rscu_thresh = config["rscu_threshold"].as<double>();
-//     double alpha = config["rscu_alpha"].as<double>();
-//     double max_ratio = config["max_low_rscu_ratio"].as<double>();
-//     bool hard = config["hard_filter_by_rscu"].as<bool>();
-//     bool soft = config["soft_filter_by_rscu"].as<bool>();
-
-//     return SIRIUSInstance(n, prot, tables, codon_usage_path, rscu_thresh, alpha, max_ratio, hard, soft);
-// }
-
-std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_from_flags(int argc, char *argv[], const SIRIUSTables &tables)
-{
-    std::string just_input;
-
-    int num_sequences = 2;
-    std::string init_target_protein = "MALEEINENSTERN";
-
-    int num_workers = 16;
-    bool show_ortools_log = false;
-    double relative_gap_limit = 0.0;
-
-    bool user_set_alpha = false;
-    bool user_set_rscu_ratio = false;
-    bool user_set_gc_end_rscu_threshold = false;
-    bool user_set_hard_rscu_threshold = false, user_set_soft_rscu_threshold = false;
-
-    std::string codon_usage_path = "";
-
-    double rscu_alpha = 10.0, max_low_rscu_ratio = 0.3;
-    double hard_rscu_threshold = 0.0, soft_rscu_threshold = 0.0, gc_end_rscu_threshold = 0.0;
-
-    if (argc == 3)
-    {
-        std::string first_arg = argv[1];
-        std::string second_arg = argv[2];
-
-        if (first_arg.find("--prot=") == 0)
-        {
-            init_target_protein = first_arg.substr(7);
-        }
-        else
-        {
-            init_target_protein = first_arg;
-        }
-
-        if (second_arg.find("--n=") == 0)
-        {
-            try
-            {
-                num_sequences = std::stoi(second_arg.substr(4));
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: Number of sequences must be a positive integer.");
-            }
-        }
-        else
-        {
-            try
-            {
-                num_sequences = std::stoi(second_arg);
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: Number of sequences must be a positive integer.");
-            }
-        }
-
-        validate_user_prot_input(init_target_protein, tables.reduced_codon_table);
-        validate_user_num_seq_input(num_sequences);
-
-        print_inputs(init_target_protein, num_sequences);
-
-        SIRIUSConfig config(show_ortools_log, num_workers, 0, relative_gap_limit);
-        SIRIUSInstance instance(num_sequences, init_target_protein, tables, "", 0, 0, 0, false, false);
-        return {instance, config};
-    }
-
-    for (int i = 1; i < argc; ++i)
-    {
-        std::string arg = argv[i];
-
-        if (arg.find("--prot=") == 0)
-        {
-            init_target_protein = arg.substr(7);
-        }
-        else if (arg.find("--n=") == 0)
-        {
-            try
-            {
-                num_sequences = std::stoi(arg.substr(4));
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: Number of sequences must be a positive integer.");
-            }
-        }
-        else if (arg.find("--relative_gap_limit=") == 0)
-        {
-            try
-            {
-                relative_gap_limit = std::stod(arg.substr(21));
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: Relative gap limit must be a positive number.");
-            }
-        }
-        else if (arg.find("--num_workers=") == 0)
-        {
-            try
-            {
-                num_workers = std::stoi(arg.substr(14));
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: Number of CPU workers must be a positive integer.");
-            }
-        }
-        else if (arg.find("--show_ortools_log=") == 0)
-        {
-            show_ortools_log = arg.substr(19) == "true";
-        }
-        else if (arg.find("--soft_rscu_thresh=") == 0)
-        {
-            try
-            {
-                soft_rscu_threshold = std::stod(arg.substr(19));
-                user_set_soft_rscu_threshold = true;
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: Soft RSCU threshold must be a positive number.");
-            }
-        }
-        else if (arg.find("--hard_rscu_thresh=") == 0)
-        {
-            try
-            {
-                hard_rscu_threshold = std::stod(arg.substr(19));
-                user_set_hard_rscu_threshold = true;
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: Hard RSCU threshold must be a positive number.");
-            }
-        }
-        else if (arg.find("--gc_end_rscu_thresh=") == 0)
-        {
-            try
-            {
-                gc_end_rscu_threshold = std::stod(arg.substr(21));
-                user_set_gc_end_rscu_threshold = true;
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: RSCU threshold must be a positive number.");
-            }
-        }
-        else if (arg.find("--rscu_alpha=") == 0)
-        {
-            try
-            {
-                rscu_alpha = std::stod(arg.substr(13));
-                user_set_alpha = true;
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: RSCU's alpha must be a number.");
-            }
-        }
-        else if (arg.find("--max_low_rscu_ratio=") == 0)
-        {
-            try
-            {
-                max_low_rscu_ratio = std::stod(arg.substr(21));
-                if (max_low_rscu_ratio < 0 || max_low_rscu_ratio > 1)
-                {
-                    throw_formatted_error("Error: Max RSCU ratio must be a number between 0-1.");
-                }
-                user_set_rscu_ratio = true;
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: Max RSCU ratio must be a number between 0-1.");
-            }
-        }
-        else if (arg.find("--codon_usage_fpath=") == 0)
-        {
-            codon_usage_path = arg.substr(20);
-            validate_file_exists(codon_usage_path, "codon usage file");
-        }
-        else
-        {
-            throw_formatted_error("Error: Unrecognized flag: " + arg);
-        }
-    }
-
-    validate_user_prot_input(init_target_protein, tables.reduced_codon_table);
-    validate_user_num_seq_input(num_sequences);
-
-    if (user_set_hard_rscu_threshold && user_set_soft_rscu_threshold)
-    {
-        throw_formatted_error("Error: Cannot both soft- and hard-filter RSCU. Define a value for only one.");
-    }
-
-    if ((user_set_hard_rscu_threshold || user_set_soft_rscu_threshold) && codon_usage_path.empty())
-    {
-        throw_formatted_error("Error: You must provide a valid path for the codon usage file (--codon_usage_fpath=) when using RSCU filtering.");
-    }
-
-    if (user_set_soft_rscu_threshold && !user_set_rscu_ratio)
-    {
-        std::ostringstream oss;
-        oss << "Warning: You did not specify an RSCU ratio for soft filtering. Using default ("
-            << std::fixed << std::setprecision(1) << max_low_rscu_ratio << ").";
-
-        print_warning_newline(oss.str());
-    }
-
-    if (user_set_soft_rscu_threshold && !user_set_alpha)
-    {
-        std::ostringstream oss;
-        oss << "Warning: You did not specify an RSCU alpha for soft filtering. Using default ("
-            << std::fixed << std::setprecision(1) << std::showpoint << rscu_alpha << ").";
-
-        print_warning_newline(oss.str());
-    }
-
-    print_inputs(init_target_protein, num_sequences);
-
-    SIRIUSInstance instance(
-        num_sequences,
-        init_target_protein,
-        tables,
-        codon_usage_path,
-        hard_rscu_threshold,
-        soft_rscu_threshold,
-        gc_end_rscu_threshold,
-        rscu_alpha,
-        max_low_rscu_ratio);
-
-    SIRIUSConfig config(show_ortools_log, num_workers, 0, relative_gap_limit);
-
-    return {instance, config};
-}
-
-std::pair<SIRIUSInstance, SIRIUSConfig> gather_inputs_interactively(SIRIUSTables &tables)
-{
-    int num_sequences;
-    std::string init_target_protein;
-    std::string codon_usage_path = "";
-
-    double rscu_alpha = 10.0;
-    double max_low_rscu_ratio = 0.3;
-    double hard_rscu_threshold = 0.5;
-    double soft_rscu_threshold = 0.7;
-    double gc_ending_rscu_threshold = 0.5;
-
-    bool use_hard_rscu = false;
-    bool use_soft_rscu = false;
-
-    std::string input;
-
-    print_info("Gather your protein: ");
-    std::getline(std::cin, init_target_protein);
-    if (init_target_protein.empty())
-    {
-        init_target_protein = "MALEEINENSTERN";
-        print_info_newline("Setting protein to " + init_target_protein);
-    }
-    else
-    {
-        validate_user_prot_input(init_target_protein, tables.reduced_codon_table);
-    }
-
-    print_info("And the number of sequences: ");
-    std::getline(std::cin, input);
-    if (input.empty())
-    {
-        num_sequences = 2;
-        print_info_newline("Setting number of sequences to " + std::to_string(num_sequences));
-    }
-    else
-    {
-        try
-        {
-            num_sequences = std::stoi(input);
-        }
-        catch (...)
-        {
-            throw_formatted_error("Error: Number of sequences must be an integer.");
-        }
-        validate_user_num_seq_input(num_sequences);
-    }
-
-    // ---- Hard filter by RSCU? ----
-    print_info("Hard filter by RSCU? (yes or no) [Default no]: ");
-    std::getline(std::cin, input);
-    if (input.empty() || input == "no")
-    {
-        use_hard_rscu = false;
-        hard_rscu_threshold = 0;
-    }
-    else if (input == "yes" || input == "y")
-    {
-        use_hard_rscu = true;
-    }
-    else
-    {
-        print_info_newline("Hä?! Bold of you to assume \"" + input + "\" for hard RSCU filter is valid. Taking that as a no.");
-        use_hard_rscu = false;
-        hard_rscu_threshold = 0;
-    }
-
-    if (!use_hard_rscu)
-    {
-        // ---- Soft filter by RSCU? ----
-        print_info("Soft filter by RSCU? (yes or no) [Default no]: ");
-        std::getline(std::cin, input);
-        if (input.empty() || input == "no")
-        {
-            use_soft_rscu = false;
-            soft_rscu_threshold = 0;
-        }
-        else if (input == "yes" || input == "y")
-        {
-            use_soft_rscu = true;
-        }
-        else
-        {
-            print_info_newline("Hä?! Bold of you to assume \"" + input + "\" for soft RSCU filter is valid. Taking that as a no.");
-            use_soft_rscu = false;
-            soft_rscu_threshold = 0;
-        }
-
-        if (use_soft_rscu)
-        {
-            print_info("Soft RSCU threshold [Default 0.7]: ");
-            std::getline(std::cin, input);
-            if (!input.empty())
-            {
-                try
-                {
-                    soft_rscu_threshold = std::stod(input);
-                    hard_rscu_threshold = 0;
-                }
-                catch (...)
-                {
-                    throw_formatted_error("Error: Soft RSCU threshold must be a number.");
-                }
-            }
-
-            print_info("Soft RSCU alpha [Default 10.0]: ");
-            std::getline(std::cin, input);
-            if (!input.empty())
-            {
-                try
-                {
-                    rscu_alpha = std::stod(input);
-                }
-                catch (...)
-                {
-                    throw_formatted_error("Error: Alpha must be a number.");
-                }
-            }
-
-            print_info("Max low-RSCU ratio [Default 0.3]: ");
-            std::getline(std::cin, input);
-            if (!input.empty())
-            {
-                try
-                {
-                    max_low_rscu_ratio = std::stod(input);
-                }
-                catch (...)
-                {
-                    throw_formatted_error("Error: Max low-RSCU ratio must be a number.");
-                }
-            }
-        }
-    }
-    else
-    {
-        print_info("Hard RSCU threshold [Default 0.5]: ");
-        std::getline(std::cin, input);
-        if (!input.empty())
-        {
-            try
-            {
-                hard_rscu_threshold = std::stod(input);
-                soft_rscu_threshold = 0;
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: Hard RSCU threshold must be a number.");
-            }
-        }
-
-        print_info("GC-ending RSCU threshold [Default 0.5]: ");
-        std::getline(std::cin, input);
-        if (!input.empty())
-        {
-            try
-            {
-                gc_ending_rscu_threshold = std::stod(input);
-            }
-            catch (...)
-            {
-                throw_formatted_error("Error: GC-ending RSCU threshold must be a number.");
-            }
-        }
-
-        print_info("Codon usage file path: ");
-        std::getline(std::cin, codon_usage_path);
-        validate_file_exists(codon_usage_path, "codon usage file");
-    }
-
-    // Codon usage required if soft filter is enabled too
-    if (use_soft_rscu && codon_usage_path.empty())
-    {
-        print_info("Codon usage file path: ");
-        std::getline(std::cin, codon_usage_path);
-        validate_file_exists(codon_usage_path, "codon usage file");
-    }
-
-    print_inputs(init_target_protein, num_sequences);
-
-    SIRIUSInstance instance(
-        num_sequences,
-        init_target_protein,
-        tables,
-        codon_usage_path,
-        hard_rscu_threshold,
-        soft_rscu_threshold,
-        gc_ending_rscu_threshold,
-        rscu_alpha,
-        max_low_rscu_ratio);
-
-    SIRIUSConfig config(false, 16, 0, 0.0); // fixed defaults
-
-    return {instance, config};
+    return combinations;
 }
 
 std::string elapsed_since_start()
@@ -1785,101 +1204,7 @@ std::string elapsed_since_start()
     return oss.str();
 }
 
-std::string create_output_folder(const std::string &base)
-{
-    namespace fs = std::filesystem;
-    std::string folder = base;
-    int index = 1;
-    while (fs::exists(folder))
-    {
-        folder = base + "_" + std::to_string(index++);
-    }
-    fs::create_directory(folder);
-    return folder;
-}
-
-std::string timestamped_filename(const std::string &prefix)
-{
-    auto now = std::chrono::system_clock::now();
-    std::time_t now_c = std::chrono::system_clock::to_time_t(now);
-    std::stringstream ss;
-    ss << prefix << "_"
-       << std::put_time(std::localtime(&now_c), "%Y-%m-%d_%H-%M-%S") << ".txt";
-    return ss.str();
-}
-
-std::string generate_unique_filename(const std::string &base_name)
-{
-    std::string name = base_name;
-    int counter = 2;
-
-    while (std::filesystem::exists(name))
-    {
-        size_t dot_pos = base_name.find('.');
-        if (dot_pos == std::string::npos)
-        {
-            name = base_name + "_" + std::to_string(counter);
-        }
-        else
-        {
-            name = base_name.substr(0, dot_pos) + "_" + std::to_string(counter) + base_name.substr(dot_pos);
-        }
-        ++counter;
-    }
-
-    return name;
-}
-
-void write_sequences_to_file_and_console(const std::vector<std::string> &sequences, const std::string &base_filename)
-{
-    std::string filename = generate_unique_filename(base_filename);
-    std::ofstream out_file(filename);
-
-    if (!out_file)
-    {
-        std::cout << RED << "> " << RESET << "[" << elapsed_since_start() << "] Error: Failed to open output file.\n";
-        return;
-    }
-
-    bool too_large = false;
-    if (sequences.at(0).size() > 100)
-    {
-        too_large = true;
-        std::cout << BLUE << "> " << RESET << "Resulting sequences too long to display here.\n";
-    }
-
-    for (const auto &seq : sequences)
-    {
-        if (!too_large)
-        {
-            std::cout << BLUE << "> " << RESET << seq << std::endl;
-        }
-
-        out_file << seq << "\n";
-    }
-
-    out_file.close();
-    std::cout << BLUE << "> " << RESET << "Find your sequences in " << filename << std::endl;
-}
-
-// Function to validate protein translation of sequences
-void validate_translated_proteins(const std::vector<std::string> &sequences,
-                                  const std::string &target_protein,
-                                  const SIRIUSTables &tables)
-{
-    for (size_t i = 0; i < sequences.size(); ++i)
-    {
-        std::string protein = translate_dna_to_protein(sequences[i], tables);
-
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Protein " << i + 1 << ": " << protein << "\n";
-        if (protein != target_protein)
-        {
-            std::cout << RED << "> " << RESET << "Dev error: SEQ " << i << " " << sequences[i] << " NOT THE SAME\n";
-        }
-    }
-}
-
-std::string translate_dna_to_protein(const std::string &dna, const SIRIUSTables &tables)
+std::string translate_dna_to_protein(const std::string &dna, SIRIUSTables &tables)
 {
     std::string protein;
     for (size_t i = 0; i + 2 < dna.size(); i += 3)
@@ -1896,26 +1221,6 @@ std::string translate_dna_to_protein(const std::string &dna, const SIRIUSTables 
         }
     }
     return protein;
-}
-
-// Create sliding window combinations out of vars depending on combination size
-// E.g., Input: vars = [z1, z2, z3], combination_size = 2
-//       Output: [[z1, z2], [z2, z3]]
-std::vector<std::vector<operations_research::sat::BoolVar>> generate_combinations(
-    const std::vector<operations_research::sat::BoolVar> &vars,
-    const int combination_size)
-{
-    std::vector<std::vector<operations_research::sat::BoolVar>> combinations;
-
-    if (combination_size <= 0 || combination_size > vars.size())
-        return combinations;
-
-    for (size_t i = 0; i <= vars.size() - combination_size; ++i)
-    {
-        combinations.emplace_back(vars.begin() + i, vars.begin() + i + combination_size);
-    }
-
-    return combinations;
 }
 
 // -------------------------------------------------
@@ -1990,29 +1295,22 @@ find_all_homologous_stretches_and_count_lengths(const std::vector<std::string> &
     return {all_stretches, length_counts};
 }
 
-void print_length_counts(const std::unordered_map<int, int> &length_counts, std::ostream *file_out)
+void print_length_counts(const std::unordered_map<int, int> &length_counts)
 {
-    if (length_counts.empty())
-    {
-        return; // Do not print anything if there are no counts
-    }
-
+    // Convert unordered_map to a vector of pairs for sorting
     std::vector<std::pair<int, int>> sorted_counts(length_counts.begin(), length_counts.end());
 
+    // Sort by length in descending order
     std::sort(sorted_counts.begin(), sorted_counts.end(),
               [](const auto &a, const auto &b)
               {
                   return a.first > b.first;
               });
 
-    std::cout << BLUE << "> " << RESET << "Fragment length counts:\n";
+    std::cout << "\nLength Counts:\n";
     for (const auto &[length, count] : sorted_counts)
     {
-        std::cout << BLUE << "> " << RESET << "Length " << length << ": " << count << " occurrences\n";
-        if (file_out)
-        {
-            *file_out << "Length " << length << ": " << count << " occurrences\n";
-        }
+        std::cout << "Length " << length << ": " << count << " occurrences\n";
     }
 }
 // -------------------------------------------------
@@ -2022,20 +1320,20 @@ void check_response(const operations_research::sat::CpSolverResponse &response)
 {
     if (response.status() == operations_research::sat::CpSolverStatus::OPTIMAL)
     {
-        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Solution is optimal.\n";
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Objective value: " << response.objective_value() << std::endl;
+        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Optimal solution found.\n";
+        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Objective value: " << response.objective_value() << std::endl;
     }
     else if (response.status() == operations_research::sat::CpSolverStatus::FEASIBLE)
     {
-        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Solution is not optimal, but feasible.\n";
-        // std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Objective value: " << response.objective_value() << std::endl;
+        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Feasible solution found.\n";
+        std::cout << BLUE << "> " << RESET << "[" << elapsed_since_start() << "] Objective value: " << response.objective_value() << std::endl;
     }
     else if (response.status() == operations_research::sat::CpSolverStatus::INFEASIBLE)
     {
-        std::cout << RED << "> DEV ERROR " << RESET << "[" << elapsed_since_start() << "] Infeasible.\n";
+        std::cout << RED << "> " << RESET << "[" << elapsed_since_start() << "] Infeasible.\n";
     }
     else if (response.status() == operations_research::sat::CpSolverStatus::MODEL_INVALID)
     {
-        std::cout << RED << "> DEV ERROR " << RESET << "[" << elapsed_since_start() << "] MODEL INVALID.\n";
+        std::cout << RED << "> " << RESET << "[" << elapsed_since_start() << "] MODEL_INVALID.\n";
     }
 }
