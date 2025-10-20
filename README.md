@@ -16,7 +16,7 @@ the desired number (_n_) of synonymous DNA sequences to be designed. __Step 2__:
 solves an integer linear program (ILP) containing millions of variables and constraints. Illustration shows
 the objective function described in the Methods section, together with the codon choices for each amino
 acid in the example peptide _P_ from Step 1. __Step 3__: The resulting feasible or optimal solution consists
-of n output synonymous DNA sequences with the fewest and shortest homologous fragments between all
+of _n_ output synonymous DNA sequences with the fewest and shortest homologous fragments between all
 sequence pairs. Highlights indicate homologous fragments between any pair.
 
 # Documentation
