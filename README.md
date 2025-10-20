@@ -1,14 +1,22 @@
 <img width="175" alt="SIRIUS Logo" src="https://github.com/user-attachments/assets/c9e8c503-9cdb-41fe-b060-0f5e1aa78760">
 
 # Introduction
-[Work in progress] 
+[Work in progress – Major release update coming late October] 
 
 SIRIUS (_<ins>S</ins>ystematische <ins>I</ins>dentifikation <ins>R</ins>edundanter, <ins>I</ins>dentisch <ins>U</ins>ebersetzter <ins>S</ins>equenzen_) is a synthetic biology tool leveraging Google OR-Tools mixed-integer programming to design genetic sequences with the shortest and fewest possible homologous fragments between pairs within minutes.
 
 - Design _n_ gene sequences all translating to a given protein _P_
 - Synthesize sequences with maximal, optimal divergence
-- Extremely fast and computationally efficient
 - Written in pure C++
+
+<img width="1313" height="365" alt="image" src="https://github.com/user-attachments/assets/bea7d05e-672f-4977-92b6-f73639c2ff41" />
+**Overview of the SIRIUS workflow.** **Step 1**: The input to SIRIUS is a protein sequence of interest (P ) and
+the desired number (n) of synonymous DNA sequences to be designed. **Step 2**: SIRIUS formulates and
+solves an integer linear program (ILP) containing millions of variables and constraints. Illustration shows
+the objective function described in the Methods section, together with the codon choices for each amino
+acid in the example peptide P from Step 1. **Step 3**: The resulting feasible or optimal solution consists
+of n output synonymous DNA sequences with the fewest and shortest homologous fragments between all
+sequence pairs. Highlights indicate homologous fragments between any pair.
 
 # Documentation
 You may find the documentation for SIRIUS at its [GitHub Wiki](https://github.com/AmirUCR/SIRIUS/wiki).
