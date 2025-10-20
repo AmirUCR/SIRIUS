@@ -8,8 +8,8 @@ SIRIUS (_<ins>S</ins>ystematische <ins>I</ins>dentifikation <ins>R</ins>edundant
 - Design _n_ gene sequences all translating to a given protein _P_
 - Synthesize sequences with maximal, optimal divergence
 - Written in pure C++
-
-<img width="1313" height="365" alt="image" src="https://github.com/user-attachments/assets/bea7d05e-672f-4977-92b6-f73639c2ff41" />
+  
+<img width="1310" height="362" alt="image" src="https://github.com/user-attachments/assets/f06cae9f-d7f9-44a0-85d5-5097706e0590" />
 
 __Overview of the SIRIUS workflow.__ __Step 1__: The input to SIRIUS is a protein sequence of interest (_P_) and
 the desired number (_n_) of synonymous DNA sequences to be designed. __Step 2__: SIRIUS formulates and
