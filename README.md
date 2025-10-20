@@ -10,11 +10,12 @@ SIRIUS (_<ins>S</ins>ystematische <ins>I</ins>dentifikation <ins>R</ins>edundant
 - Written in pure C++
 
 <img width="1313" height="365" alt="image" src="https://github.com/user-attachments/assets/bea7d05e-672f-4977-92b6-f73639c2ff41" />
-**Overview of the SIRIUS workflow.** **Step 1**: The input to SIRIUS is a protein sequence of interest (P ) and
-the desired number (n) of synonymous DNA sequences to be designed. **Step 2**: SIRIUS formulates and
+
+__Overview of the SIRIUS workflow.__ __Step 1__: The input to SIRIUS is a protein sequence of interest (_P_) and
+the desired number (_n_) of synonymous DNA sequences to be designed. __Step 2__: SIRIUS formulates and
 solves an integer linear program (ILP) containing millions of variables and constraints. Illustration shows
 the objective function described in the Methods section, together with the codon choices for each amino
-acid in the example peptide P from Step 1. **Step 3**: The resulting feasible or optimal solution consists
+acid in the example peptide _P_ from Step 1. __Step 3__: The resulting feasible or optimal solution consists
 of n output synonymous DNA sequences with the fewest and shortest homologous fragments between all
 sequence pairs. Highlights indicate homologous fragments between any pair.
 
