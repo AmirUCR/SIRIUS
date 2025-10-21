@@ -3,7 +3,7 @@
 # Introduction
 [Work in progress – Major release update coming late October] 
 
-SIRIUS (_<ins>S</ins>ystematische <ins>I</ins>dentifikation <ins>R</ins>edundanter, <ins>I</ins>dentisch <ins>U</ins>ebersetzter <ins>S</ins>equenzen_) is a synthetic biology tool leveraging Google OR-Tools mixed-integer programming to design genetic sequences with the shortest and fewest possible homologous fragments between pairs within minutes.
+SIRIUS (_<ins>S</ins>ystematische <ins>I</ins>dentifikation <ins>R</ins>edundanter, <ins>I</ins>dentisch <ins>U</ins>ebersetzter <ins>S</ins>equenzen_) is a synthetic biology tool leveraging Google OR-Tools integer programming to design genetic sequences with the shortest and fewest possible homologous fragments between pairs within minutes.
 
 - Design _n_ gene sequences all translating to a given protein _P_
 - Effectively synthesize sequences with maximal, optimal divergence
