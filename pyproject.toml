@@ -13,7 +13,7 @@ requires-python = ">=3.10"
 sirius = "sirius.sirius_wrapper:main"
 
 [tool.cibuildwheel.linux]
-environment = { CFLAGS = "-m=64" }
+environment = { CFLAGS = "-m64" }
 
 [tool.setuptools.packages.find]
 where = ["python"]

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.20)
 project(SIRIUS LANGUAGES CXX)
 
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+  add_compile_options(-march=x86-64 -mtune=generic)
+endif()
+
 # --- Build config
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,9 +13,6 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 endif()
-
-# Optional tuning (comment out if unnecessary)
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -mtune=generic")
 
 # --- Threads (robust)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
