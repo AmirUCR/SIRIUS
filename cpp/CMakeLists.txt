@@ -1,20 +1,12 @@
 cmake_minimum_required(VERSION 3.20)
 project(SIRIUS LANGUAGES CXX)
 
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
-  add_compile_options(-march=x86-64 -mtune=generic)
-endif()
-
 # --- Build config
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m=64 -mtune=generic")
 
-if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
-endif()
-
-# --- Threads (robust)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads QUIET)
 if(Threads_FOUND)
@@ -26,17 +18,24 @@ else()
   target_link_options(pthread_if INTERFACE -pthread)
 endif()
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
 # --- OR-Tools: vendored
 set(OR_TOOLS_DIR "${CMAKE_CURRENT_LIST_DIR}/ortools")
+
 if(NOT EXISTS "${OR_TOOLS_DIR}")
   message(FATAL_ERROR "Vendored OR-Tools directory not found: ${OR_TOOLS_DIR}")
 endif()
 
+# Find the library file
 find_library(ORTOOLS_LIB
   NAMES ortools
   PATHS "${OR_TOOLS_DIR}/lib"
   NO_DEFAULT_PATH
 )
+
 if(NOT ORTOOLS_LIB)
   message(FATAL_ERROR "libortools (.so or .a) not found in ${OR_TOOLS_DIR}/lib")
 endif()
@@ -53,30 +52,25 @@ add_executable(sirius
   src/interface.cpp
 )
 
-# --- Includes
+# Headers live one level up: <repo_root>/sirius/include
 target_include_directories(sirius PRIVATE
   "${CMAKE_CURRENT_LIST_DIR}/include"
   "${OR_TOOLS_DIR}/include"
 )
 
-# --- RPATH so the wheel’s sirius/lib is searched at runtime
-set(_rpath "\$ORIGIN/../lib")
+target_link_libraries(sirius PRIVATE
+  -lm
+  -ldl
+  "${ORTOOLS_LIB}"
+  Threads::Threads
+)
+
+# Emit binary into the build dir (setup.py copies build_temp/sirius)
 set_target_properties(sirius PROPERTIES
   RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}"
-  BUILD_RPATH   "${_rpath}"
-  INSTALL_RPATH "${_rpath}"
 )
 
-# --- Link order consolidated (m, dl, pthreads + OR-Tools)
-#   Use 'm' and 'dl' (CMake adds -l), and the pthread_if interface
-target_link_libraries(sirius PRIVATE
-  "${ORTOOLS_LIB}"
-  m
-  dl
-  pthread_if
-)
-
-# --- Release opts
+# Optional: a touch of optimization for Release
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
   if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(sirius PRIVATE -O3 -pipe)
