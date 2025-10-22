@@ -15,7 +15,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.17.0
         env:
           # Install EPEL, clean cache, and then install patchelf
-          CIBW_BEFORE_ALL_LINUX: "dnf install -y epel-release; dnf clean all; dnf install -y patchelf" 
+          CIBW_BEFORE_ALL_LINUX: "yum install -y epel-release; yum clean all; yum install -y patchelf"
           
           # Use a modern manylinux image
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux2014
