@@ -1,0 +1,30 @@
+Start testing: Dec 05 15:42 PST
+----------------------------------------------------------
+1/1 Testing: test_simple_mip_program
+1/1 Test: test_simple_mip_program
+Command: "/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_mip_program/build/bin/simple_mip_program"
+Directory: /data/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_mip_program/build
+"test_simple_mip_program" start time: Dec 05 15:42 PST
+Output:
+----------------------------------------------------------
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1733442132.783185 3580965 simple_mip_program.cc:39] Number of variables = 2
+I0000 00:00:1733442132.783361 3580965 simple_mip_program.cc:53] Number of constraints = 2
+I0000 00:00:1733442132.784361 3580965 simple_mip_program.cc:73] Solution:
+I0000 00:00:1733442132.784392 3580965 simple_mip_program.cc:74] Objective value = 23
+I0000 00:00:1733442132.784423 3580965 simple_mip_program.cc:75] x = 3
+I0000 00:00:1733442132.784432 3580965 simple_mip_program.cc:76] y = 2
+I0000 00:00:1733442132.784436 3580965 simple_mip_program.cc:80] 
+Advanced usage:
+I0000 00:00:1733442132.784439 3580965 simple_mip_program.cc:81] Problem solved in 4 milliseconds
+I0000 00:00:1733442132.784445 3580965 simple_mip_program.cc:82] Problem solved in 0 iterations
+I0000 00:00:1733442132.784449 3580965 simple_mip_program.cc:83] Problem solved in 1 branch-and-bound nodes
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"test_simple_mip_program" end time: Dec 05 15:42 PST
+"test_simple_mip_program" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Dec 05 15:42 PST

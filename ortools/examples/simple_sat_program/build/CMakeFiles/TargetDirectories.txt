@@ -1,0 +1,8 @@
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build/CMakeFiles/simple_sat_program.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build/CMakeFiles/test.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build/CMakeFiles/edit_cache.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build/CMakeFiles/rebuild_cache.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build/CMakeFiles/list_install_components.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build/CMakeFiles/install.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build/CMakeFiles/install/local.dir
+/home/amohs002/projects/research/SIRIUS/or-tools/examples/simple_sat_program/build/CMakeFiles/install/strip.dir

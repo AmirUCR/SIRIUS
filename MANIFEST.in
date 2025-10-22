@@ -1,0 +1,11 @@
+include CMakeLists.txt
+
+include sirius.cpp
+include sirius/src/*.cpp
+
+include sirius/resources/py27_env.tar.gz
+
+recursive-include ortools *
+recursive-include sirius/GeneDiversifier *
+recursive-include sirius/GeneDiversifier/data *.csv
+recursive-include sirius/include *.hpp

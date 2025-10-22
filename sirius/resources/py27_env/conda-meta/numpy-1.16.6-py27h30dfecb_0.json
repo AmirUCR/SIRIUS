@@ -1,0 +1,36 @@
+{
+ "build": "py27h30dfecb_0", 
+ "build_number": 0, 
+ "channel": "https://repo.anaconda.com/pkgs/main/linux-64", 
+ "constrains": [], 
+ "depends": [
+  "libgcc-ng >=7.3.0", 
+  "python >=2.7,<2.8.0a0", 
+  "blas * openblas", 
+  "libgfortran-ng >=7,<8.0a0", 
+  "libopenblas >=0.3.3,<1.0a0", 
+  "numpy-base 1.16.6 py27h2f8d375_0"
+ ], 
+ "extracted_package_dir": "", 
+ "files": [], 
+ "fn": "numpy-1.16.6-py27h30dfecb_0.conda", 
+ "license": "BSD 3-Clause", 
+ "link": {
+  "source": "", 
+  "type": 1
+ }, 
+ "md5": "33e3029fdf91609231e8c98d0f32c7ab", 
+ "name": "numpy", 
+ "package_tarball_full_path": "", 
+ "paths_data": {
+  "paths": [], 
+  "paths_version": 1
+ }, 
+ "requested_spec": "numpy=1.16.6", 
+ "sha256": "72c2370ed1eb5848fc5f32a719c75c6cb2cb5a35b84fa13ac1977e24b7200a94", 
+ "size": 49623, 
+ "subdir": "linux-64", 
+ "timestamp": 1580501499000, 
+ "url": "https://repo.anaconda.com/pkgs/main/linux-64/numpy-1.16.6-py27h30dfecb_0.conda", 
+ "version": "1.16.6"
+}

@@ -1,0 +1,45 @@
+==> 2025-10-13 19:25:43 <==
+# cmd: /home/amohs002/miniconda3/bin/conda create -y -n sirius_py27 python=2.7 numpy=1.16.6 scipy=1.2.1 pandas=0.24.2 biopython=1.74
+# conda version: 24.9.2
++defaults/linux-64::_libgcc_mutex-0.1-main
++defaults/linux-64::_openmp_mutex-5.1-1_gnu
++defaults/linux-64::biopython-1.74-py27h7b6447c_0
++defaults/linux-64::blas-1.0-openblas
++defaults/linux-64::ca-certificates-2025.9.9-h06a4308_0
++defaults/linux-64::libffi-3.4.4-h6a678d5_1
++defaults/linux-64::libgcc-ng-11.2.0-h1234567_1
++defaults/linux-64::libgfortran-ng-7.5.0-ha8ba4b0_17
++defaults/linux-64::libgfortran4-7.5.0-ha8ba4b0_17
++defaults/linux-64::libgomp-11.2.0-h1234567_1
++defaults/linux-64::libopenblas-0.3.18-hf726d26_0
++defaults/linux-64::libstdcxx-ng-11.2.0-h1234567_1
++defaults/linux-64::libxcb-1.17.0-h9b100fa_0
++defaults/linux-64::libzlib-1.3.1-hb25bd0a_0
++defaults/linux-64::ncurses-6.5-h7934f7d_0
++defaults/linux-64::numpy-1.16.6-py27h30dfecb_0
++defaults/linux-64::numpy-base-1.16.6-py27h2f8d375_0
++defaults/linux-64::pandas-0.24.2-py27he6710b0_0
++defaults/linux-64::pip-19.3.1-py27_0
++defaults/linux-64::pthread-stubs-0.3-h0ce48e5_1
++defaults/linux-64::python-2.7.18-h42bf7aa_3
++defaults/linux-64::readline-8.3-hc2a1206_0
++defaults/linux-64::scipy-1.2.1-py27he2b7bc3_0
++defaults/linux-64::setuptools-44.0.0-py27_0
++defaults/linux-64::sqlite-3.50.2-hb25bd0a_1
++defaults/linux-64::tk-8.6.15-h54e0aa7_0
++defaults/linux-64::xorg-libx11-1.8.12-h9b100fa_1
++defaults/linux-64::xorg-libxau-1.0.12-h9b100fa_0
++defaults/linux-64::xorg-libxdmcp-1.1.5-h9b100fa_0
++defaults/linux-64::xorg-xorgproto-2024.1-h5eee18b_1
++defaults/linux-64::zlib-1.3.1-hb25bd0a_0
++defaults/noarch::certifi-2020.6.20-pyhd3eb1b0_3
++defaults/noarch::python-dateutil-2.8.2-pyhd3eb1b0_0
++defaults/noarch::pytz-2021.3-pyhd3eb1b0_0
++defaults/noarch::six-1.16.0-pyhd3eb1b0_1
++defaults/noarch::wheel-0.37.1-pyhd3eb1b0_0
+# update specs: ['biopython=1.74', 'numpy=1.16.6', 'pandas=0.24.2', 'python=2.7', 'scipy=1.2.1']
+==> 2025-10-13 19:26:33 <==
+# cmd: /home/amohs002/miniconda3/bin/conda install -y -n sirius_py27 conda-pack
+# conda version: 24.9.2
++defaults/noarch::conda-pack-0.6.0-pyhd3eb1b0_0
+# update specs: ['conda-pack']
