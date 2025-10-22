@@ -50,10 +50,10 @@ target_include_directories(sirius PRIVATE
 )
 
 target_link_libraries(sirius PRIVATE
-  "${ORTOOLS_LIB}"
-  Threads::Threads
   -lm
   -ldl
+  "${ORTOOLS_LIB}"
+  Threads::Threads
 )
 
 # Emit binary into the build dir (setup.py copies build_temp/sirius)
