@@ -14,11 +14,10 @@ jobs:
       - name: Build Python wheels
         uses: pypa/cibuildwheel@v2.17.0
         env:
-          # Use dnf (the modern package manager) instead of yum
-          CIBW_BEFORE_ALL_LINUX: "dnf config-manager --set-enabled powertools; dnf install -y patchelf"
+          # Install EPEL, clean cache, and then install patchelf
+          CIBW_BEFORE_ALL_LINUX: "dnf install -y epel-release; dnf clean all; dnf install -y patchelf" 
           
-          # Use a modern manylinux image (based on AlmaLinux 9)
-          # instead of the EOL CentOS 7 (manylinux2014)
+          # Use a modern manylinux image
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 
       - name: Upload to TestPyPI
