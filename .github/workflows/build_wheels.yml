@@ -18,7 +18,7 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: "dnf install -y epel-release; dnf clean all; dnf install -y patchelf" 
           
           # Use a modern manylinux image
-          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_31
 
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
