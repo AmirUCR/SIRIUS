@@ -1,3 +1,4 @@
+# .github/workflows/build_wheels.yml
 name: Build and Upload Wheels
 
 on: workflow_dispatch
@@ -13,14 +14,16 @@ jobs:
       - name: Build Python wheels
         uses: pypa/cibuildwheel@v2.17.0
         env:
-          # Tell cibuildwheel to install patchelf inside the build container
-          CIBW_BEFORE_ALL_LINUX: "yum install -y patchelf"
+          # Use dnf (the modern package manager) instead of yum
+          CIBW_BEFORE_ALL_LINUX: "dnf install -y patchelf"
+          
+          # Use a modern manylinux image (based on AlmaLinux 9)
+          # instead of the EOL CentOS 7 (manylinux2014)
+          CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
 
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
-          # We built the wheels in the step above
-          # 'cibuildwheel' puts them in ./wheelhouse/
           packages_dir: ./wheelhouse/
