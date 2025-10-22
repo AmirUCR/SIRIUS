@@ -31,6 +31,17 @@ if(NOT ORTOOLS_LIB)
   message(FATAL_ERROR "libortools (.so or .a) not found in ${OR_TOOLS_DIR}/lib")
 endif()
 
+find_library(STDCPP_LIB NAMES stdc++)
+if(NOT STDCPP_LIB)
+  message(FATAL_ERROR "Could not find stdc++ library.")
+endif()
+
+# Find the standard Math library (for GLIBC symbols like exp2, log)
+find_library(MATH_LIB NAMES m)
+if(NOT MATH_LIB)
+  message(FATAL_ERROR "Could not find math library (-lm).")
+endif()
+
 # --- Sources
 add_executable(sirius
   sirius.cpp
@@ -52,8 +63,8 @@ target_include_directories(sirius PRIVATE
 target_link_libraries(sirius PRIVATE
   "${ORTOOLS_LIB}"
   Threads::Threads
-  -lstdc++
-  -lm
+  "${STDCPP_LIB}"
+  "${MATH_LIB}"
 )
 
 # Emit binary into the build dir (setup.py copies build_temp/sirius)
