@@ -12,6 +12,9 @@ requires-python = ">=3.10"
 [project.scripts]
 sirius = "sirius.sirius_wrapper:main"
 
+[tool.cibuildwheel.linux]
+environment = { CFLAGS = "-march=x86-64" }
+
 [tool.setuptools.packages.find]
 where = ["python"]
 include = ["sirius*"]
