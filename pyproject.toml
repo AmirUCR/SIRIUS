@@ -4,16 +4,16 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sirius"
-authors = [
-  {name = "Amirsadra Mohseni", email = "amohs002@ucr.edu"},
-]
-version = "1.0.0"
+version = "1.0"
+description = "SIRIUS: codon-diverse sequence generator with ILP/CP-SAT core"
+authors = [{ name = "Amirsadra Mohseni", email = "amohs002@ucr.edu" }]
 requires-python = ">=3.10"
 
 [project.scripts]
 sirius = "sirius.sirius_wrapper:main"
 
 [tool.setuptools.packages.find]
+where = ["python"]
 include = ["sirius*"]
 
 [tool.setuptools.package-data]

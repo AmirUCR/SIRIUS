@@ -1,0 +1,9 @@
+build/
+build_temp/
+dist/
+*.egg-info/
+__pycache__/
+python/sirius/build/
+
+sirius_exp/
+sirius.egg-info/

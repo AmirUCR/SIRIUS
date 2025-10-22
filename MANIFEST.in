@@ -1,11 +1,19 @@
+include README.md
+include LICENSE
 include CMakeLists.txt
 
-include sirius.cpp
-include sirius/src/*.cpp
+# C++ sources
+recursive-include cpp *.cpp *.hpp CMakeLists.txt
+recursive-include cpp/ortools *
 
-include sirius/resources/py27_env.tar.gz
+# Python package
+recursive-include python/sirius *.py
+recursive-include python/sirius/GeneDiversifier *.py
+recursive-include python/sirius/GeneDiversifier/data *.csv
+include python/sirius/resources/py27_env.tar.gz
 
-recursive-include ortools *
-recursive-include sirius/GeneDiversifier *
-recursive-include sirius/GeneDiversifier/data *.csv
-recursive-include sirius/include *.hpp
+# Do not include caches or stray builds
+prune **/__pycache__
+prune **/.pytest_cache
+exclude **/*.pyc
+exclude build_temp/*
