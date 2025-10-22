@@ -48,8 +48,6 @@ target_include_directories(sirius PRIVATE
 )
 
 target_link_libraries(sirius PRIVATE
-  -m
-  -dl
   -pthread
   "${ORTOOLS_LIB}"
 )
