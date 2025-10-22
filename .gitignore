@@ -7,3 +7,4 @@ python/sirius/build/
 
 sirius_exp/
 sirius.egg-info/
+wheelhouse/
