@@ -15,7 +15,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.17.0
         env:
           # Use dnf (the modern package manager) instead of yum
-          CIBW_BEFORE_ALL_LINUX: "dnf install -y patchelf"
+          CIBW_BEFORE_ALL_LINUX: "dnf config-manager --set-enabled powertools; dnf install -y patchelf"
           
           # Use a modern manylinux image (based on AlmaLinux 9)
           # instead of the EOL CentOS 7 (manylinux2014)
