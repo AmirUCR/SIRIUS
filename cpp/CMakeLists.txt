@@ -18,16 +18,12 @@ include(FetchContent)
 FetchContent_Declare(
   or-tools
   GIT_REPOSITORY https://github.com/google/or-tools.git
-  GIT_TAG        "v9.11"
-  # Passing multiple CMAKE variables to configure the OR-Tools build
+  GIT_TAG        "v9.14"
   CMAKE_ARGS -DBUILD_DEPS=ON
              -DBUILD_absl=ON
              -DUSE_COINOR=OFF
              -DUSE_HIGHS=OFF
              -DUSE_SCIP=OFF
-             
-             # FIX: Using simple assignment syntax (VAR=OFF) and adding 
-             # the C++-specific flags which appear to be set to ON in the log.
              -DBUILD_SAMPLES=OFF
              -DBUILD_EXAMPLES=OFF
              -DUSE_DOTNET_8=OFF
