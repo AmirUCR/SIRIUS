@@ -19,7 +19,15 @@ FetchContent_Declare(
   or-tools
   GIT_REPOSITORY https://github.com/google/or-tools.git
   GIT_TAG        "v9.11"
-  CMAKE_ARGS -DBUILD_DEPS=ON -BUILD_absl=ON -USE_COINOR=OFF -USE_HIGHS=OFF -USE_SCIP=OFF -BUILD_SAMPLES=OFF -BUILD_EXAMPLES=OFF -USE_DOTNET_8=OFF 
+  # Passing multiple CMAKE variables to configure the OR-Tools build
+  CMAKE_ARGS -DBUILD_DEPS:BOOL=ON
+             -DBUILD_absl:BOOL=ON
+             -DUSE_COINOR:BOOL=OFF
+             -DUSE_HIGHS:BOOL=OFF
+             -DUSE_SCIP:BOOL=OFF
+             -DBUILD_SAMPLES:BOOL=OFF
+             -DBUILD_EXAMPLES:BOOL=OFF
+             -DUSE_DOTNET_8:BOOL=OFF
 )
 
 # After the following call, the CMake targets defined by OR-Tools
