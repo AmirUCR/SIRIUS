@@ -26,7 +26,7 @@ class CMakeBuild(build_ext):
                                "-DUSE_DOTNET_8=OFF"], cwd=build_temp)
 
         print("[BUILD] Building with CMake...")
-        subprocess.check_call(["cmake", "--build", ".", "--config", "Release"], cwd=build_temp)
+        subprocess.check_call(["cmake", "--build", ".", "--config", "Release", "--verbose"], cwd=build_temp)
 
         # Binary produced by CMake
         binary_src = build_temp / "sirius"
