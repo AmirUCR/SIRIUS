@@ -27,6 +27,7 @@
 #include "cxxopts.hpp"
 
 #include "ortools/util/sigint.h"
+#include "ortools/sat/cp_model.h"
 #include "ortools/base/logging.h"
 #include "ortools/base/init_google.h"
 
