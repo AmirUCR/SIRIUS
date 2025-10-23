@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.24)
 project(SIRIUS VERSION 1.0 LANGUAGES CXX)
 
 # --- Build config
@@ -19,15 +19,15 @@ FetchContent_Declare(
   or-tools
   GIT_REPOSITORY https://github.com/google/or-tools.git
   GIT_TAG        "v9.14"
-  CMAKE_ARGS -DBUILD_DEPS=ON
-             -DBUILD_absl=ON
-             -DUSE_COINOR=OFF
-             -DUSE_HIGHS=OFF
-             -DUSE_SCIP=OFF
-             -DBUILD_SAMPLES=OFF
-             -DBUILD_EXAMPLES=OFF
-             -DUSE_DOTNET_8=OFF
 )
+  #CMAKE_ARGS -DBUILD_DEPS=ON
+  #           -DBUILD_absl=ON
+  #           -DUSE_COINOR=OFF
+  #           -DUSE_HIGHS=OFF
+  #           -DUSE_SCIP=OFF
+  #           -DBUILD_SAMPLES=OFF
+  #           -DBUILD_EXAMPLES=OFF
+  #           -DUSE_DOTNET_8=OFF
 
 # After the following call, the CMake targets defined by OR-Tools
 # will be defined and available to the rest of the build
