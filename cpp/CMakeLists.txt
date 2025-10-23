@@ -12,13 +12,14 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 #list(APPEND CMAKE_PREFIX_PATH "${OR_TOOLS_DIR}/lib/cmake" "${OR_TOOLS_DIR}/share/eigen3/cmake/")
 #find_package(ZLIB NO_MODULE REQUIRED)
 #find_package(ortools NO_MODULE REQUIRED)
+#find_package(absl NO_MODULE REQUIRED)
 
 include(FetchContent)
 FetchContent_Declare(
   or-tools
   GIT_REPOSITORY https://github.com/google/or-tools.git
   GIT_TAG        "v9.11"
-  CMAKE_ARGS -DBUILD_DEPS=ON
+  CMAKE_ARGS -DBUILD_DEPS=ON -BUILD_absl=ON -USE_COINOR=OFF -USE_HIGHS=OFF -USE_SCIP=OFF -BUILD_SAMPLES=OFF -BUILD_EXAMPLES=OFF -USE_DOTNET_8=OFF 
 )
 
 # After the following call, the CMake targets defined by OR-Tools
