@@ -1,4 +1,4 @@
-SIRIUS uses Gene-Diversifier as a warm-start technique, as outlined in its publication. Gene-Diversifier was developed by Altamura et. al., and can be found here ["Rational design and construction of multi-copy biomanufacturing islands in mammalian cells Open Access," _Nucleic Acids Research_, Volume 50, Issue 1, 11 January 2022, gkaf783](https://doi.org/10.1093/nar/gkab1214)
+SIRIUS uses Gene-Diversifier as a warm-start technique, as outlined in its publication. Gene-Diversifier was developed by Altamura et. al., and can be found here ["Rational design and construction of multi-copy biomanufacturing islands in mammalian cells," _Nucleic Acids Research_, Volume 50, Issue 1, 11 January 2022, gkaf783](https://doi.org/10.1093/nar/gkab1214)
 
 The Gene-Diversifier source code is available at: [https://github.com/altamurr/Gene-Diversifier](https://github.com/altamurr/Gene-Diversifier)
 
