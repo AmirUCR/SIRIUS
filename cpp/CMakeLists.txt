@@ -32,7 +32,7 @@ target_include_directories(sirius PRIVATE
 
 # --- Linking
 target_link_libraries(sirius PRIVATE
-  ortools::ortools
+  ortools::sat
   -pthread
 )
 
