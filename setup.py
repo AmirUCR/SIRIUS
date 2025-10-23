@@ -16,7 +16,14 @@ class CMakeBuild(build_ext):
 
         # Configure + build
         print("[BUILD] Configuring CMake...")
-        subprocess.check_call(["cmake", str(src_dir), "-DBUILD_DEPS=ON"], cwd=build_temp)
+        subprocess.check_call(["cmake", str(src_dir), 
+                               "-DBUILD_DEPS=ON", 
+                               "-DUSE_COINOR=OFF", 
+                               "-DUSE_HIGHS=OFF", 
+                               "-DUSE_SCIP=OFF", 
+                               "-DBUILD_SAMPLES=OFF", 
+                               "-DBUILD_EXAMPLES=OFF", 
+                               "-DUSE_DOTNET_8=OFF"], cwd=build_temp)
 
         print("[BUILD] Building with CMake...")
         subprocess.check_call(["cmake", "--build", ".", "--config", "Release"], cwd=build_temp)
