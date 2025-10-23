@@ -18,6 +18,7 @@ class CMakeBuild(build_ext):
                         "-DUSE_COINOR=OFF", 
                         "-DUSE_HIGHS=OFF", 
                         "-DUSE_SCIP=OFF",
+                        "-DUSE_PDLP=OFF",
                         "-DBUILD_TESTING=OFF",
                         "-DBUILD_SAMPLES=OFF", 
                         "-DBUILD_EXAMPLES=OFF",
@@ -28,7 +29,7 @@ class CMakeBuild(build_ext):
         subprocess.check_call(["cmake", str(src_dir)] + ortools_args, cwd=build_temp)
 
         print("[BUILD] Building with CMake...")
-        subprocess.check_call(["cmake", "--build", ".", "--config", "Release"], cwd=build_temp)
+        subprocess.check_call(["cmake", "--build", ".", "--config", "Release", "--verbose"], cwd=build_temp)
 
         # Binary produced by CMake
         binary_src = build_temp / "sirius"

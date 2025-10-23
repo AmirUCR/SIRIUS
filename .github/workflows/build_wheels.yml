@@ -12,9 +12,14 @@ jobs:
 
       - name: Build Python wheels
         uses: pypa/cibuildwheel@v2.22.0
-        # env:
+        env:
           # Install EPEL, clean cache, and then install patchelf
           # CIBW_BEFORE_ALL_LINUX: "yum install -y epel-release; yum clean all; yum install -y patchelf"
+          CIBW_ENVIRONMENT: 'CXXFLAGS="-march=x86-64 -mtune=generic" CFLAGS="-march=x86-64 -mtune=generic"'
+          
+          # 2. Ensure these new CXXFLAGS/CFLAGS are passed into the build process
+          CIBW_ENVIRONMENT_PASS_LINUX: "CMAKE_BUILD_PARALLEL_LEVEL CXXFLAGS CFLAGS"
+          CIBW_MANYLINUX_X86_64_IMAGE: "manylinux2014"
 
       - name: Upload to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
