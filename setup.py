@@ -17,9 +17,10 @@ class CMakeBuild(build_ext):
         ortools_args = ["-DBUILD_DEPS=ON", 
                         "-DUSE_COINOR=OFF", 
                         "-DUSE_HIGHS=OFF", 
-                        "-DUSE_SCIP=OFF", 
+                        "-DUSE_SCIP=OFF",
+                        "-DBUILD_TESTING=OFF",
                         "-DBUILD_SAMPLES=OFF", 
-                        "-DBUILD_EXAMPLES=OFF", 
+                        "-DBUILD_EXAMPLES=OFF",
                         "-DUSE_DOTNET_8=OFF"]
 
         # Configure + build
