@@ -8,6 +8,10 @@ class CMakeBuild(build_ext):
         root = pathlib.Path(__file__).resolve().parent
         src_dir = root / "cpp"
         build_temp = root / "build_temp"
+
+        if build_temp.exists():
+            shutil.rmtree(build_temp)
+
         build_temp.mkdir(exist_ok=True)
 
         # Configure + build
