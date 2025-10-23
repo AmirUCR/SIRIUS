@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(SIRIUS LANGUAGES CXX)
+project(SIRIUS VERSION 1.0 LANGUAGES CXX)
 
 # --- Build config
 set(CMAKE_CXX_STANDARD 17)
@@ -20,14 +20,17 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/google/or-tools.git
   GIT_TAG        "v9.11"
   # Passing multiple CMAKE variables to configure the OR-Tools build
-  CMAKE_ARGS -DBUILD_DEPS:BOOL=ON
-             -DBUILD_absl:BOOL=ON
-             -DUSE_COINOR:BOOL=OFF
-             -DUSE_HIGHS:BOOL=OFF
-             -DUSE_SCIP:BOOL=OFF
-             -DBUILD_SAMPLES:BOOL=OFF
-             -DBUILD_EXAMPLES:BOOL=OFF
-             -DUSE_DOTNET_8:BOOL=OFF
+  CMAKE_ARGS -DBUILD_DEPS=ON
+             -DBUILD_absl=ON
+             -DUSE_COINOR=OFF
+             -DUSE_HIGHS=OFF
+             -DUSE_SCIP=OFF
+             
+             # FIX: Using simple assignment syntax (VAR=OFF) and adding 
+             # the C++-specific flags which appear to be set to ON in the log.
+             -DBUILD_SAMPLES=OFF
+             -DBUILD_EXAMPLES=OFF
+             -DUSE_DOTNET_8=OFF
 )
 
 # After the following call, the CMake targets defined by OR-Tools
