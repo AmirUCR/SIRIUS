@@ -1,3 +1,5 @@
-# Gene-Diversifier: A suite of Python scripts accompanying the article "Rational design and construction of multi-copy biomanufacturing islands in mammalian cells" (NAR, 2022).
-# Gene-Diversifier uses a novel algorithm to generate divergent DNA sequences, all encoding the same protein of interest, that are optimised for expression in a user-specified mammalian host.
-# Gene diversifier can be freely downloaded. Refer to accompanying instructions.txt file for instructions on how to use the program.
+SIRIUS uses Gene-Diversifier as a warm-start technique, as outlined in its publication. Gene-Diversifier was developed by Altamura et. al., and can be found here ["Rational design and construction of multi-copy biomanufacturing islands in mammalian cells Open Access," _Nucleic Acids Research_, Volume 50, Issue 1, 11 January 2022, gkaf783](https://doi.org/10.1093/nar/gkab1214)
+
+The Gene-Diversifier source code is available at: [https://github.com/altamurr/Gene-Diversifier](https://github.com/altamurr/Gene-Diversifier)
+
+When Gene-Diversifier was downloaded, modified, and adapted for SIRIUS (last checked October 23, 2025), the repository was licensed under CC0 1.0 Universal, which permits commercial use, modification, distribution, and private use. [License](https://github.com/AmirUCR/FORK-Gene-Diversifier/blob/main/LICENSE)
