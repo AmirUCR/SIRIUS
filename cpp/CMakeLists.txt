@@ -18,6 +18,7 @@ FetchContent_Declare(
   or-tools
   GIT_REPOSITORY https://github.com/google/or-tools.git
   GIT_TAG        "v9.11"
+  CMAKE_ARGS -DBUILD_DEPS=ON
 )
 
 # After the following call, the CMake targets defined by OR-Tools
