@@ -648,13 +648,15 @@ namespace sirius::utils
     {
         if (response.status() == operations_research::sat::CpSolverStatus::OPTIMAL)
         {
+            unsigned int integer_value = static_cast<unsigned int>(response.objective_value());
             logg.print_timed_info_newline("Solution is optimal.");
-            logg.print_timed_info_newline("Objective value: " + std::to_string(response.objective_value()));
+            logg.print_timed_info_newline("Objective value: " + std::to_string(integer_value));
         }
         else if (response.status() == operations_research::sat::CpSolverStatus::FEASIBLE)
         {
+            unsigned int integer_value = static_cast<unsigned int>(response.objective_value());
             logg.print_timed_info_newline("Solution is not proven optimal, but feasible.");
-            logg.print_timed_info_newline("Objective value: " + std::to_string(response.objective_value()));
+            logg.print_timed_info_newline("Objective value: " + std::to_string(integer_value));
         }
         else if (response.status() == operations_research::sat::CpSolverStatus::INFEASIBLE)
         {
