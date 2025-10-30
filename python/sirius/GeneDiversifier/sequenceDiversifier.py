@@ -5,8 +5,6 @@ import sys, collections, re, scipy.stats
 import numpy as np
 from numpy import random
 import pandas as pd
-from Bio.SeqUtils import GC
-from scipy import random
 
 # ------------------------ Variable definition (codon table) --------------------------- #
 
@@ -83,7 +81,7 @@ def generate_codon_table(path, codon_table_full, rar_thr, gc_thr):
         # Extract parameters from .csv file
         cod = rscu['Codon']
         val = rscu['RSCU']
-        gc3 = rscu['GC3']
+        # gc3 = rscu['GC3']
     else:
         symb = ['G', 'G', 'G', 'G', 'E',
                 'E', 'D', 'D', 'V', 'V', 
@@ -126,19 +124,19 @@ def generate_codon_table(path, codon_table_full, rar_thr, gc_thr):
                0.84, 1.16, 2.409638554, 0.421686747, 0.78313253, 
                1.204819277, 0.78313253, 0.481927711, 0.44, 1.12, 
                1.16, 1.28]
-        gc3 = ['Y', 'N', 'N', 'Y', 'Y', 
-               'N', 'N', 'Y', 'Y', 'N', 
-               'N', 'Y', 'Y', 'N', 'N', 
-               'Y', 'Y', 'N', 'N', 'Y', 
-               'Y', 'N', 'N', 'Y', 'Y', 
-               'N', 'N', 'Y', 'Y', 'N', 
-               'Y', 'N', 'Y', 'N', 'N', 
-               'Y', 'N', 'Y', 'Y', 'N', 
-               'N', 'Y', 'N', 'Y', 'Y', 
-               'N', 'N', 'Y', 'Y', 'N', 
-               'Y', 'N', 'N', 'Y', 'Y', 
-               'N', 'N', 'Y', 'Y', 'N', 
-               'Y', 'N', 'N', 'Y']
+        # gc3 = ['Y', 'N', 'N', 'Y', 'Y', 
+        #        'N', 'N', 'Y', 'Y', 'N', 
+        #        'N', 'Y', 'Y', 'N', 'N', 
+        #        'Y', 'Y', 'N', 'N', 'Y', 
+        #        'Y', 'N', 'N', 'Y', 'Y', 
+        #        'N', 'N', 'Y', 'Y', 'N', 
+        #        'Y', 'N', 'Y', 'N', 'N', 
+        #        'Y', 'N', 'Y', 'Y', 'N', 
+        #        'N', 'Y', 'N', 'Y', 'Y', 
+        #        'N', 'N', 'Y', 'Y', 'N', 
+        #        'Y', 'N', 'N', 'Y', 'Y', 
+        #        'N', 'N', 'Y', 'Y', 'N', 
+        #        'Y', 'N', 'N', 'Y']
 
     # Initialise a dictionary with unique amino acid symbols as keys
     codon_table = {}
