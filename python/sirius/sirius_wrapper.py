@@ -1,7 +1,7 @@
 import os, sys, subprocess, pathlib, tarfile, shutil, signal
 
 CACHE_BASE = pathlib.Path(os.path.expanduser("~/.cache/sirius"))
-ENV_VERSION = "py27env-1"  # bump if you change the tarball
+ENV_VERSION = "py27env-8"  # bump if you change the tarball
 CACHE_DIR = CACHE_BASE / ENV_VERSION
 
 def ensure_py27_env(pkg_root: pathlib.Path) -> pathlib.Path:
@@ -9,21 +9,54 @@ def ensure_py27_env(pkg_root: pathlib.Path) -> pathlib.Path:
     if env_python.exists():
         return env_python
 
-    tarball = pkg_root / "resources" / "py27_env.tar.gz"
-    if not tarball.exists():
-        sys.exit(f"[SIRIUS] Missing tarball: {tarball}")
+    # Prefer .xz (smaller), fall back to .gz
+    candidates = [
+        pkg_root / "resources" / "py27_env.tar.xz",
+        pkg_root / "resources" / "py27_env.tar.gz",
+    ]
+    tarball = next((p for p in candidates if p.exists()), None)
+    if not tarball:
+        sys.exit(f"[SIRIUS] Missing tarball under {pkg_root}/resources")
 
     if CACHE_DIR.exists():
         shutil.rmtree(CACHE_DIR)
     CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    with tarfile.open(tarball, "r:gz") as tf:
+
+    import tarfile, os, subprocess
+
+    def _is_within(base_dir: str, member_name: str) -> bool:
+        # purely lexical (no symlink resolution)
+        base = os.path.abspath(base_dir)
+        dest = os.path.abspath(os.path.normpath(os.path.join(base_dir, member_name)))
+        return dest == base or dest.startswith(base + os.sep)
+
+    with tarfile.open(tarball, "r:*") as tf:
+        for m in tf.getmembers():
+            # reject absolute paths or '..' traversal lexically
+            if not _is_within(str(CACHE_DIR), m.name) or os.path.isabs(m.name):
+                sys.exit("[SIRIUS] Unsafe path in py27 archive; aborting.")
         tf.extractall(CACHE_DIR)
 
-    env_python = CACHE_DIR / "bin" / "python"
-    if not env_python.exists():
-        sys.exit("[SIRIUS] Failed to unpack bundled Python 2.7 environment.")
-    return env_python
+    # Fix symlinks/paths created by conda-pack
+    cu = CACHE_DIR / "bin" / "conda-unpack"
+    if cu.exists():
+        try:
+            subprocess.check_call([str(cu)], cwd=str(CACHE_DIR))
+        except Exception:
+            pass
 
+    # Ensure a runnable python
+    p = CACHE_DIR / "bin" / "python"
+    if not p.exists():
+        for q in (CACHE_DIR / "bin").glob("python2*"):
+            if q.exists():
+                (CACHE_DIR / "bin" / "python").symlink_to(q.name)
+                p = CACHE_DIR / "bin" / "python"
+                break
+    if not p.exists():
+        sys.exit("[SIRIUS] Failed to unpack bundled Python 2.7 environment (no bin/python found).")
+    p.chmod(p.stat().st_mode | 0o111)
+    return p
 
 def _die(msg: str):
     sys.stderr.write(f"[SIRIUS] {msg}\n")

@@ -1,114 +1,118 @@
 from setuptools import setup, find_packages, Extension
 from setuptools.command.build_ext import build_ext
-import subprocess, pathlib, sys, shutil, os
-from glob import glob
+import subprocess, pathlib, shutil, os, re, stat, sys
+
+root = pathlib.Path(__file__).resolve().parent
+long_description = (root / "README.md").read_text()
 
 class CMakeBuild(build_ext):
-    def run(self):
-        root = pathlib.Path(__file__).resolve().parent
-        src_dir = root / "cpp"
-        build_temp = root / "build_temp"
+    def build_extension(self, ext):
+        src_dir    = root / "cpp"
+        build_dir  = pathlib.Path(self.build_temp) / "cmake-build"
+        build_dir.mkdir(parents=True, exist_ok=True)
 
-        if build_temp.exists():
-            shutil.rmtree(build_temp)
+        # === Configure CMake ===
+        ortools_args = [
+            "-DBUILD_DEPS=ON",
+            "-DUSE_COINOR=OFF", "-DUSE_HIGHS=OFF", "-DUSE_SCIP=OFF",
+            "-DUSE_BOP=OFF", "-DUSE_GLOP=OFF", "-DUSE_MATH_OPT=OFF",
+            "-DUSE_PDLP=OFF", "-DBUILD_TESTING=OFF",
+            "-DBUILD_SAMPLES=OFF", "-DBUILD_EXAMPLES=OFF",
+            "-DUSE_DOTNET_8=OFF",
+        ]
+        py = sys.executable
+        cmake_args = [
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_POSITION_INDEPENDENT_CODE=ON",
+            "-DPYBIND11_FINDPYTHON=ON",
+            f"-DPython_EXECUTABLE={py}",
+            f"-DPython3_EXECUTABLE={py}",
+            f"-DPYTHON_EXECUTABLE={py}",
+            "-DPython3_FIND_VIRTUALENV=FIRST",
+        ]
+        for var in ("CMAKE_C_FLAGS","CMAKE_CXX_FLAGS",
+                    "CMAKE_EXE_LINKER_FLAGS","CMAKE_MODULE_LINKER_FLAGS","CMAKE_SHARED_LINKER_FLAGS"):
+            if os.environ.get(var):
+                cmake_args.append(f"-D{var}={os.environ[var]}")
 
-        build_temp.mkdir(exist_ok=True)
+        print("[BUILD] Configuring CMake…")
+        subprocess.check_call(["cmake", "-S", str(src_dir), "-B", str(build_dir)] + ortools_args + cmake_args)
 
-        ortools_args = ["-DBUILD_DEPS=ON", 
-                        "-DUSE_COINOR=OFF", 
-                        "-DUSE_HIGHS=OFF", 
-                        "-DUSE_SCIP=OFF",
-                        "-DUSE_PDLP=OFF",
-                        "-DBUILD_TESTING=OFF",
-                        "-DBUILD_SAMPLES=OFF", 
-                        "-DBUILD_EXAMPLES=OFF",
-                        "-DUSE_DOTNET_8=OFF"]
+        print("[BUILD] Building…")
+        jobs = os.environ.get("CMAKE_BUILD_PARALLEL_LEVEL", "4")
+        subprocess.check_call(["cmake", "--build", str(build_dir), "--config", "Release", "--parallel", jobs, "--verbose"])
 
-        # Configure + build
-        print("[BUILD] Configuring CMake...")
-        subprocess.check_call(["cmake", str(src_dir)] + ortools_args, cwd=build_temp)
+        # === 1) Install the pybind extension into the ABI-tagged path ===
+        ext_path = pathlib.Path(self.get_ext_fullpath(ext.name))
+        ext_path.parent.mkdir(parents=True, exist_ok=True)
+        so_candidates = list(build_dir.glob("_sirius*.so"))
+        if not so_candidates:
+            raise RuntimeError("Could not find _sirius*.so in build dir")
+        shutil.copyfile(so_candidates[0], ext_path)
+        os.chmod(ext_path, os.stat(ext_path).st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
-        print("[BUILD] Building with CMake...")
-        subprocess.check_call(["cmake", "--build", ".", "--config", "Release", "--verbose"], cwd=build_temp)
+        # === 2) Stage the native executable + deps into build_lib/sirius ===
+        pkg_stage = pathlib.Path(self.build_lib) / "sirius"
+        bin_out   = pkg_stage / "build"
+        lib_out   = pkg_stage / "lib"
+        bin_out.mkdir(parents=True, exist_ok=True)
+        lib_out.mkdir(parents=True, exist_ok=True)
 
-        # Binary produced by CMake
-        binary_src = build_temp / "sirius"
-        if not binary_src.exists():
-            sys.exit(f"[BUILD][FATAL] Missing binary: {binary_src}")
+        exe = build_dir / "sirius"  # thanks to CMAKE_RUNTIME_OUTPUT_DIRECTORY
+        if not exe.exists():
+            raise RuntimeError(f"did not find built executable at {exe}")
+        target_exe = bin_out / "sirius"
+        shutil.copy2(exe, target_exe)
 
-        # Prepare package staging dir
-        build_py = self.get_finalized_command("build_py")
-        self.run_command("build_py")
-        pkg_root = pathlib.Path(build_py.build_lib) / "sirius"
-        
-        # Copy executable
-        exe_staging_dir = pkg_root / "build"
-        exe_staging_dir.mkdir(parents=True, exist_ok=True)
-        exe_path = exe_staging_dir / "sirius"
-        print(f"[BUILD] Copying executable to {exe_path}")
-        shutil.copy2(binary_src, exe_path)
+        # bundle non-system .so used by the exe
+        def is_system(path: str) -> bool:
+            return path.startswith(("/lib", "/usr/lib", "/usr/lib64"))
+        ldd_out = subprocess.check_output(["ldd", str(exe)], text=True, stderr=subprocess.STDOUT)
+        for line in ldd_out.splitlines():
+            m = re.search(r"=>\s*(/[^ ]+)", line)
+            if m:
+                p = m.group(1)
+                if not is_system(p):
+                    dst = lib_out / pathlib.Path(p).name
+                    if not dst.exists():
+                        shutil.copy2(p, dst)
 
-        # Copy libraries
-        ortools_lib_dir = root / "cpp" / "ortools" / "lib"
-        pkg_lib_dir = pkg_root / "lib"
-        pkg_lib_dir.mkdir(parents=True, exist_ok=True)
-        print(f"[BUILD] Copying libraries to {pkg_lib_dir}")
+        strip = shutil.which("strip")
+        if strip:
+            for path in [ext_path, target_exe] + list((lib_out).glob("*.so*")):
+                try:
+                    subprocess.check_call([strip, "--strip-unneeded", str(path)])
+                except Exception:
+                    pass
 
-        matched = False 
-        # grab unversioned, SONAME, and fully-versioned files
-        for pat in ("libortools.so", "libortools.so.*"):
-            for p in glob(str(ortools_lib_dir / pat)):
-                print(f"[BUILD] Copying {p}")
-                shutil.copy2(p, pkg_lib_dir / os.path.basename(p))
-                matched = True
-        if not matched:
-            sys.exit(f"[BUILD][FATAL] No libortools.so* found under {ortools_lib_dir}")
-
-        # also copy sibling deps (absl/protobuf, etc.) if present
-        for p in glob(str(ortools_lib_dir / "*.so*")):
-            name = os.path.basename(p)
-            if name.startswith("libortools.so"):
-                continue
-            print(f"[BUILD] Copying dependency {p}")
-            shutil.copy2(p, pkg_lib_dir / name) 
-
-        # Set the RPATH of the executable so auditwheel can find
-        # the libraries we just copied. This is only needed on Linux.
-        if sys.platform == "linux":
-            print(f"[BUILD] Setting RPATH on {exe_path}")
-            try:
-                # The executable is in <pkg_root>/build/sirius
-                # The libraries are in <pkg_root>/lib/
-                # The relative path from the exe's dir to the lib dir is ../lib
-                # $ORIGIN is a linker token meaning "the directory of the executable"
-                rpath = "$ORIGIN/../lib"
-                subprocess.check_call([
-                    "patchelf",
-                    "--set-rpath",
-                    rpath,
-                    str(exe_path)
-                ])
-                print(f"[BUILD] RPATH set to {rpath}")
-            except (subprocess.CalledProcessError, FileNotFoundError) as e:
-                print(f"[BUILD][FATAL] patchelf failed. This is required for manylinux wheels.")
-                print(f"[BUILD][FATAL] Please install patchelf (e.g., 'yum install patchelf')")
-                print(f"[BUILD][FATAL] Error: {e}")
-                sys.exit(1)
+        # RPATH so the exe finds ../lib at runtime
+        patchelf = shutil.which("patchelf")
+        if patchelf:
+            subprocess.check_call([patchelf, "--set-rpath", "$ORIGIN/../lib:$ORIGIN", str(target_exe)])
+        else:
+            print("[BUILD] Warning: patchelf not found; wrapper will fallback to LD_LIBRARY_PATH.")
 
 setup(
-    name="sirius",
-    version="1.0",
+    name="sirius-bio",
+    version="1.4",
+    long_description=long_description,
+    long_description_content_type='text/markdown',
     packages=find_packages(where="python", include=["sirius", "sirius.*"]),
     package_dir={"": "python"},
     include_package_data=True,
     package_data={
         "sirius": [
+            "resources/py27_env.tar.xz",
             "build/sirius",
-            "resources/py27_env.tar.gz",
-            "lib/*.so*",
+            "lib/*",
         ],
-        "sirius.GeneDiversifier": ["*.py", "data/*.csv"],
+        "sirius.GeneDiversifier": ["data/*.csv"],
     },
-    ext_modules=[Extension("sirius_dummy", sources=[])],
     cmdclass={"build_ext": CMakeBuild},
+    # dummy extension just to trigger build_ext; CMake builds the real .so
+    ext_modules=[Extension("sirius._sirius", sources=["cpp/src/pybind_module.cpp"])],
+    entry_points={"console_scripts": [
+        "sirius = sirius.sirius_wrapper:main",
+        "sirius-bio = sirius.sirius_wrapper:main"
+        ]},
 )

@@ -3,11 +3,13 @@ requires = ["setuptools>=69", "wheel", "cmake>=3.20"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sirius"
-version = "1.0"
-description = "SIRIUS: codon-diverse sequence generator with ILP/CP-SAT core"
+name = "sirius-bio"
+version = "1.4"
+description = "SIRIUS: maximally divergent synonymous gene design with ILP/CP-SAT core "
 authors = [{ name = "Amirsadra Mohseni", email = "amohs002@ucr.edu" }]
 requires-python = ">=3.10"
+readme = "README.md"
+license = { file = "LICENSE" }
 
 [project.scripts]
 sirius = "sirius.sirius_wrapper:main"
@@ -17,5 +19,5 @@ where = ["python"]
 include = ["sirius*"]
 
 [tool.setuptools.package-data]
-"sirius" = ["build/sirius", "resources/py27_env.tar.gz"]
+"sirius" = ["build/sirius", "resources/py27_env.tar.xz"]
 "sirius.GeneDiversifier" = ["*.py", "data/*.csv"]
