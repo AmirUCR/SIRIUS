@@ -68,7 +68,7 @@ namespace sirius
                 cxxopts::value<int>()->default_value(std::to_string(max_time_in_seconds)))
             ("R,relative-gap-limit", "Relative LIP gap limit (0..1)",
                 cxxopts::value<double>()->default_value(std::to_string(relative_gap_limit)))
-            ("show-ortools-log", "Enable solver logging",
+            ("v,show-ortools-log", "Enable solver logging",
                 cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
 
             ("o,output-folder", "Output folder name",
@@ -77,15 +77,15 @@ namespace sirius
             // RSCU / CSV
             ("c,codon-usage-fpath", "Path to codon usage CSV (overrides packaged default)",
                 cxxopts::value<std::string>()->default_value(packaged_default_csv))
-            ("hard-rscu-thresh", "Hard RSCU threshold",
+            ("h,hard-rscu-thresh", "Hard RSCU threshold",
                 cxxopts::value<double>()->default_value("0.0"))
-            ("soft-rscu-thresh", "Soft RSCU threshold",
+            ("s,soft-rscu-thresh", "Soft RSCU threshold",
                 cxxopts::value<double>()->default_value("0.0"))
             // ("gc-end-rscu-thresh", "GC-end RSCU threshold",
             //     cxxopts::value<double>()->default_value("0.0"))
-            ("rscu-alpha", "Alpha for soft RSCU",
+            ("a,rscu-alpha", "Alpha for soft RSCU",
                 cxxopts::value<double>()->default_value("10.0"))
-            ("max-low-rscu-ratio", "Max fraction (0..1) of low-RSCU codons allowed in soft filtering",
+            ("m,max-low-rscu-ratio", "Max fraction (0..1) of low-RSCU codons allowed in soft filtering",
                 cxxopts::value<double>()->default_value("0.3"))
 
             ("q,quiet", "Quiet mode")
