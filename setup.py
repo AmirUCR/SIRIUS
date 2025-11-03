@@ -3,7 +3,7 @@ from setuptools.command.build_ext import build_ext
 import subprocess, pathlib, shutil, os, re, stat, sys
 
 root = pathlib.Path(__file__).resolve().parent
-long_description = (root / "README.md").read_text()
+long_description = (root / "pypi_README.md").read_text()
 
 class CMakeBuild(build_ext):
     def build_extension(self, ext):
@@ -94,7 +94,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name="sirius-bio",
-    version="1.4",
+    version="1.7",
     long_description=long_description,
     long_description_content_type='text/markdown',
     packages=find_packages(where="python", include=["sirius", "sirius.*"]),
@@ -113,6 +113,8 @@ setup(
     ext_modules=[Extension("sirius._sirius", sources=["cpp/src/pybind_module.cpp"])],
     entry_points={"console_scripts": [
         "sirius = sirius.sirius_wrapper:main",
-        "sirius-bio = sirius.sirius_wrapper:main"
-        ]},
+        "sirius-bio = sirius.sirius_wrapper:main",
+        "sirius-cache-purge = sirius.sirius_wrapper:purge_cache_main"
+        ]
+    },
 )

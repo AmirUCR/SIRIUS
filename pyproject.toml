@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sirius-bio"
-version = "1.4"
+version = "1.7"
 description = "SIRIUS: maximally divergent synonymous gene design with ILP/CP-SAT core "
 authors = [{ name = "Amirsadra Mohseni", email = "amohs002@ucr.edu" }]
 requires-python = ">=3.10"
-readme = "README.md"
+readme = "pypi_README.md"
 license = { file = "LICENSE" }
 
 [project.scripts]

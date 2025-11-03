@@ -66,7 +66,7 @@ namespace sirius
                 cxxopts::value<int>()->default_value(std::to_string(num_workers)))
             ("t,max-sec", "Time limit (seconds)",
                 cxxopts::value<int>()->default_value(std::to_string(max_time_in_seconds)))
-            ("R,relative-gap-limit", "Relative LIP gap limit (0..1)",
+            ("g,relative-gap-limit", "Relative LIP gap limit (0..1)",
                 cxxopts::value<double>()->default_value(std::to_string(relative_gap_limit)))
             ("v,show-ortools-log", "Enable solver logging",
                 cxxopts::value<bool>()->default_value("false")->implicit_value("true"))
@@ -77,9 +77,9 @@ namespace sirius
             // RSCU / CSV
             ("c,codon-usage-fpath", "Path to codon usage CSV (overrides packaged default)",
                 cxxopts::value<std::string>()->default_value(packaged_default_csv))
-            ("h,hard-rscu-thresh", "Hard RSCU threshold",
+            ("hard-rscu-thresh", "Hard RSCU threshold",
                 cxxopts::value<double>()->default_value("0.0"))
-            ("s,soft-rscu-thresh", "Soft RSCU threshold",
+            ("soft-rscu-thresh", "Soft RSCU threshold",
                 cxxopts::value<double>()->default_value("0.0"))
             // ("gc-end-rscu-thresh", "GC-end RSCU threshold",
             //     cxxopts::value<double>()->default_value("0.0"))
