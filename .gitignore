@@ -7,6 +7,5 @@ python/sirius/build/
 instructions.txt
 pack_p27.sh
 
-sirius_exp/
 sirius.egg-info/
 wheelhouse/

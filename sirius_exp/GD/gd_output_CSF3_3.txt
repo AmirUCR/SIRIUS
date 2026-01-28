@@ -1,0 +1,29 @@
+Paste protein sequence (press Return) then number of degenerate sequences to generate (press Return): Enter expression host (human, mouse OR cho): Enter RSCU value below which codons are discared: Enter RSCU value below which codons not ending in G/C are discarded:         CAI       GC %                                           Sequence seq ID
+0  0.604817  53.594771  ATGGCGGGACCAGCTACGCAAAGCCCTATGAAGTTGATGGCTCTGC...   seq0
+1  0.622810  53.594771  ATGGCAGGTCCTGCCACGCAGAGTCCGATGAAGTTAATGGCATTAC...   seq1
+2  0.632531  53.594771  ATGGCTGGGCCGGCAACTCAAAGTCCAATGAAATTGATGGCGCTGC...   seq2
+3  0.602343  54.084967  ATGGCCGGGCCAGCAACACAATCGCCAATGAAGCTTATGGCATTGC...   seq3
+4  0.587625  53.758170  ATGGCGGGCCCGGCGACTCAGTCACCCATGAAGCTAATGGCCCTTC...   seq4
+5  0.624392  55.392157  ATGGCAGGACCTGCTACACAGTCCCCTATGAAACTAATGGCGTTAC...   seq5
+6  0.597793  52.777778  ATGGCTGGCCCTGCGACGCAATCTCCGATGAAATTAATGGCGCTAC...   seq6
+7  0.600561  54.738562  ATGGCCGGTCCCGCTACCCAGTCTCCCATGAAACTGATGGCCCTCC...   seq7
+8  0.582784  55.065359  ATGGCGGGGCCCGCGACACAGTCGCCCATGAAACTCATGGCTCTCC...   seq8
+9  0.641867  53.594771  ATGGCAGGCCCAGCCACCCAATCACCGATGAAGCTCATGGCACTAC...   seq9
+Stats: Mean, minimum and maximum hamming distances in the sequence set are (per cent): (29.157588961510534, 26.797385620915033, 31.5359477124183)
+Stats: Longest stretch of homology between any two sequences (in bp): 17.0
+
+Length Counts:
+Length 17: 2 occurrences
+Length 14: 6 occurrences
+Length 12: 2 occurrences
+Length 11: 15 occurrences
+Length 10: 8 occurrences
+Length 9: 6 occurrences
+Length 8: 251 occurrences
+Length 7: 69 occurrences
+Length 6: 70 occurrences
+Length 5: 1347 occurrences
+Length 4: 132 occurrences
+Length 3: 358 occurrences
+Length 2: 3538 occurrences
+Length 1: 745 occurrences

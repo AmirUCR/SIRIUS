@@ -1,0 +1,6 @@
+i=320
+max_sec=19200
+start_epoch=1758611855
+end_epoch=1758631107
+duration_seconds=19252
+duration_hms=05:20:52

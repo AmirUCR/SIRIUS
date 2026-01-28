@@ -1,5 +1,7 @@
 <img width="175" alt="SIRIUS Logo" src="https://github.com/user-attachments/assets/c9e8c503-9cdb-41fe-b060-0f5e1aa78760">
 
+This repo is outdated. See [https://github.com/ucrbioinfo/SIRIUS](https://github.com/ucrbioinfo/SIRIUS)
+
 # Introduction
 SIRIUS (_<ins>S</ins>ystematische <ins>I</ins>dentifikation <ins>R</ins>edundanter, <ins>I</ins>dentisch <ins>U</ins>ebersetzter <ins>S</ins>equenzen_) is a synthetic biology tool leveraging Google OR-Tools integer programming to design genetic sequences with the shortest and fewest possible homologous fragments between pairs within minutes.
 

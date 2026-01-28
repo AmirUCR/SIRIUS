@@ -1,0 +1,5 @@
+Length 8: 5 occurrences
+Length 5: 107 occurrences
+Length 3: 18 occurrences
+Length 2: 398 occurrences
+Length 1: 54 occurrences

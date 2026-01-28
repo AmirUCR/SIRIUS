@@ -1,0 +1,8 @@
+i=7
+max_sec=4800
+start_epoch=1758833546
+end_epoch=1758838363
+duration_seconds=4817
+duration_hms=01:20:17
+peak_memory_kb=133756832
+peak_memory_mb=130622
