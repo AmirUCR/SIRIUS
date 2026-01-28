@@ -28,7 +28,7 @@ from Bio.SeqRecord import SeqRecord
 from Bio.Alphabet import generic_protein
 from Bio.Alphabet import generic_nucleotide
 
-DIR = "/home/amohs002/projects/research/Gene-Diversifier/"
+DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ------------------------ Variable definition (codon table) --------------------------- #
 
